@@ -60,9 +60,14 @@ export default function ProductsPage() {
         try {
             const response = await api.get("/products");
 
-            setProducts(response.data.products);
+            setProducts(
+                response.data.products ?? []
+            );
         } catch (error) {
-            console.error("Failed to load products:", error);
+            console.error(
+                "Failed to load products:",
+                error
+            );
         }
     }
 
@@ -70,9 +75,14 @@ export default function ProductsPage() {
         try {
             const response = await api.get("/categories");
 
-            setCategories(response.data.categories);
+            setCategories(
+                response.data.categories ?? []
+            );
         } catch (error) {
-            console.error("Failed to load categories:", error);
+            console.error(
+                "Failed to load categories:",
+                error
+            );
         }
     }
 
@@ -108,6 +118,8 @@ export default function ProductsPage() {
     }
 
     function closeModal() {
+        if (loading) return;
+
         setModal(null);
         setEditingProduct(null);
         resetForm();
@@ -125,11 +137,13 @@ export default function ProductsPage() {
 
         if (!file.type.startsWith("image/")) {
             alert("Please select an image file.");
+            event.target.value = "";
             return;
         }
 
         if (file.size > 5 * 1024 * 1024) {
             alert("Image must be smaller than 5MB.");
+            event.target.value = "";
             return;
         }
 
@@ -169,13 +183,17 @@ export default function ProductsPage() {
                 }
             );
 
-            const createdProduct = response.data.product;
+            const createdProduct =
+                response.data.product;
 
             if (image) {
-                await uploadImage(createdProduct.id);
+                await uploadImage(
+                    createdProduct.id
+                );
             }
 
             closeModal();
+
             await loadProducts();
         } catch (error: any) {
             console.error(error);
@@ -193,7 +211,9 @@ export default function ProductsPage() {
         if (!editingProduct) return;
 
         if (!name.trim() || !price) {
-            alert("Product name and price are required.");
+            alert(
+                "Product name and price are required."
+            );
             return;
         }
 
@@ -210,10 +230,13 @@ export default function ProductsPage() {
             );
 
             if (image) {
-                await uploadImage(editingProduct.id);
+                await uploadImage(
+                    editingProduct.id
+                );
             }
 
             closeModal();
+
             await loadProducts();
         } catch (error: any) {
             console.error(error);
@@ -237,7 +260,9 @@ export default function ProductsPage() {
         try {
             setLoading(true);
 
-            await api.delete(`/products/${id}`);
+            await api.delete(
+                `/products/${id}`
+            );
 
             await loadProducts();
         } catch (error: any) {
@@ -252,92 +277,63 @@ export default function ProductsPage() {
         }
     }
 
-    async function toggleVisibility(product: Product) {
-        try {
-            await api.put(
-                `/products/${product.id}`,
-                {
-                    isVisible: !product.isVisible,
-                }
-            );
-
-            await loadProducts();
-        } catch (error: any) {
-            console.error(error);
-
-            alert(
-                error.response?.data?.message ||
-                    "Failed to update visibility."
-            );
-        }
-    }
-
-    const visibleProducts = products.filter(
-        (product) => product.isVisible
-    ).length;
-
     return (
         <div className="text-white">
 
             {/* HEADER */}
-            <div className="flex items-center justify-between mb-8">
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+
                 <div>
-                    <h1 className="text-3xl font-bold">
+                    <h1 className="text-2xl sm:text-3xl font-bold">
                         Products
                     </h1>
 
-                    <p className="text-gray-400 mt-1">
+                    <p className="text-gray-400 mt-1 text-sm sm:text-base">
                         Manage your menu products
                     </p>
                 </div>
 
                 <button
                     onClick={openCreateModal}
-                    className="bg-blue-600 hover:bg-blue-500 px-5 py-3 rounded-xl font-semibold transition shadow-lg shadow-blue-600/20"
+                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 px-5 py-3 rounded-xl font-semibold transition shadow-lg shadow-blue-600/20"
                 >
                     + Add Product
                 </button>
+
             </div>
 
             {/* STATS */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 
-                <div className="bg-[#111827] border border-white/10 rounded-2xl p-5">
-                    <p className="text-gray-400 text-sm">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
+
+                <div className="bg-[#111827] border border-white/10 rounded-2xl p-4 sm:p-5">
+                    <p className="text-gray-400 text-xs sm:text-sm">
                         Total Products
                     </p>
 
-                    <p className="text-3xl font-bold mt-2">
+                    <p className="text-2xl sm:text-3xl font-bold mt-2">
                         {products.length}
                     </p>
                 </div>
 
-                <div className="bg-[#111827] border border-white/10 rounded-2xl p-5">
-                    <p className="text-gray-400 text-sm">
+                <div className="bg-[#111827] border border-white/10 rounded-2xl p-4 sm:p-5">
+                    <p className="text-gray-400 text-xs sm:text-sm">
                         Categories
                     </p>
 
-                    <p className="text-3xl font-bold mt-2">
+                    <p className="text-2xl sm:text-3xl font-bold mt-2">
                         {categories.length}
-                    </p>
-                </div>
-
-                <div className="bg-[#111827] border border-white/10 rounded-2xl p-5">
-                    <p className="text-gray-400 text-sm">
-                        Visible Products
-                    </p>
-
-                    <p className="text-3xl font-bold mt-2">
-                        {visibleProducts}
                     </p>
                 </div>
 
             </div>
 
             {/* LOADING */}
+
             {pageLoading ? (
 
-                <div className="bg-[#111827] border border-white/10 rounded-2xl p-16 text-center">
+                <div className="bg-[#111827] border border-white/10 rounded-2xl p-12 sm:p-16 text-center">
                     <p className="text-gray-400">
                         Loading products...
                     </p>
@@ -346,7 +342,8 @@ export default function ProductsPage() {
             ) : products.length === 0 ? (
 
                 /* EMPTY STATE */
-                <div className="bg-[#111827] border border-white/10 rounded-2xl p-16 text-center">
+
+                <div className="bg-[#111827] border border-white/10 rounded-2xl p-10 sm:p-16 text-center">
 
                     <div className="text-5xl mb-4">
                         🍽️
@@ -356,7 +353,7 @@ export default function ProductsPage() {
                         No products yet
                     </h2>
 
-                    <p className="text-gray-400 mt-2 mb-6">
+                    <p className="text-gray-400 mt-2 mb-6 text-sm sm:text-base">
                         Start building your menu by adding your
                         first product.
                     </p>
@@ -373,7 +370,8 @@ export default function ProductsPage() {
             ) : (
 
                 /* PRODUCTS */
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
 
                     {products.map((product) => (
 
@@ -383,7 +381,8 @@ export default function ProductsPage() {
                         >
 
                             {/* IMAGE */}
-                            <div className="h-48 bg-[#0b1120] relative">
+
+                            <div className="h-48 sm:h-52 bg-[#0b1120] relative">
 
                                 {product.imageUrl ? (
 
@@ -401,7 +400,6 @@ export default function ProductsPage() {
 
                                 )}
 
-                                {/* CATEGORY */}
                                 {product.category && (
                                     <div className="absolute top-3 left-3">
                                         <span className="bg-black/70 backdrop-blur text-white text-xs px-3 py-1.5 rounded-full">
@@ -410,43 +408,24 @@ export default function ProductsPage() {
                                     </div>
                                 )}
 
-                                {/* VISIBILITY */}
-                                <button
-                                    onClick={() =>
-                                        toggleVisibility(product)
-                                    }
-                                    className={`absolute top-3 right-3 text-xs px-3 py-1.5 rounded-full backdrop-blur transition ${
-                                        product.isVisible
-                                            ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
-                                            : "bg-red-500/20 text-red-400 hover:bg-red-500/30"
-                                    }`}
-                                >
-                                    {product.isVisible
-                                        ? "● Visible"
-                                        : "● Hidden"}
-                                </button>
-
                             </div>
 
                             {/* CONTENT */}
-                            <div className="p-5">
 
-                                <div className="flex justify-between gap-4">
+                            <div className="p-4 sm:p-5">
 
-                                    <div className="min-w-0">
+                                <div className="flex flex-col gap-2">
 
-                                        <h2 className="font-bold text-lg truncate">
-                                            {product.name}
-                                        </h2>
+                                    <h2 className="font-bold text-lg truncate">
+                                        {product.name}
+                                    </h2>
 
-                                        <p className="text-gray-400 text-sm mt-1 line-clamp-2">
-                                            {product.description ||
-                                                "No description"}
-                                        </p>
+                                    <p className="text-gray-400 text-sm line-clamp-2 min-h-[40px]">
+                                        {product.description ||
+                                            "No description"}
+                                    </p>
 
-                                    </div>
-
-                                    <span className="text-blue-400 font-bold whitespace-nowrap">
+                                    <span className="text-blue-400 font-bold text-lg">
                                         ₺
                                         {Number(
                                             product.price
@@ -456,11 +435,14 @@ export default function ProductsPage() {
                                 </div>
 
                                 {/* ACTIONS */}
+
                                 <div className="flex gap-2 mt-5">
 
                                     <button
                                         onClick={() =>
-                                            openEditModal(product)
+                                            openEditModal(
+                                                product
+                                            )
                                         }
                                         className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-2.5 rounded-lg text-sm font-medium transition"
                                     >
@@ -474,7 +456,7 @@ export default function ProductsPage() {
                                             )
                                         }
                                         disabled={loading}
-                                        className="px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                                        className="flex-1 sm:flex-none px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
                                     >
                                         Delete
                                     </button>
@@ -492,13 +474,15 @@ export default function ProductsPage() {
             )}
 
             {/* MODAL */}
+
             {modal && (
 
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+                    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4"
                     onMouseDown={(event) => {
                         if (
-                            event.target === event.currentTarget &&
+                            event.target ===
+                                event.currentTarget &&
                             !loading
                         ) {
                             closeModal();
@@ -506,10 +490,11 @@ export default function ProductsPage() {
                     }}
                 >
 
-                    <div className="w-full max-w-lg bg-[#111827] border border-white/10 rounded-2xl shadow-2xl">
+                    <div className="w-full sm:max-w-lg max-h-[95vh] overflow-y-auto bg-[#111827] border border-white/10 rounded-t-2xl sm:rounded-2xl shadow-2xl">
 
                         {/* MODAL HEADER */}
-                        <div className="flex items-center justify-between p-6 border-b border-white/10">
+
+                        <div className="sticky top-0 bg-[#111827] flex items-center justify-between p-5 sm:p-6 border-b border-white/10">
 
                             <div>
                                 <h2 className="text-xl font-bold">
@@ -528,7 +513,7 @@ export default function ProductsPage() {
                             <button
                                 onClick={closeModal}
                                 disabled={loading}
-                                className="text-gray-400 hover:text-white text-xl disabled:opacity-50"
+                                className="text-gray-400 hover:text-white text-xl disabled:opacity-50 p-2"
                             >
                                 ✕
                             </button>
@@ -536,9 +521,11 @@ export default function ProductsPage() {
                         </div>
 
                         {/* FORM */}
-                        <div className="p-6 space-y-4">
+
+                        <div className="p-5 sm:p-6 space-y-4">
 
                             {/* NAME */}
+
                             <div>
                                 <label className="text-sm text-gray-400">
                                     Product Name
@@ -547,7 +534,9 @@ export default function ProductsPage() {
                                 <input
                                     value={name}
                                     onChange={(e) =>
-                                        setName(e.target.value)
+                                        setName(
+                                            e.target.value
+                                        )
                                     }
                                     placeholder="e.g. Classic Burger"
                                     className="w-full mt-1 bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500"
@@ -555,6 +544,7 @@ export default function ProductsPage() {
                             </div>
 
                             {/* PRICE */}
+
                             <div>
                                 <label className="text-sm text-gray-400">
                                     Price
@@ -563,17 +553,21 @@ export default function ProductsPage() {
                                 <input
                                     value={price}
                                     onChange={(e) =>
-                                        setPrice(e.target.value)
+                                        setPrice(
+                                            e.target.value
+                                        )
                                     }
                                     type="number"
                                     min="0"
                                     step="0.01"
+                                    inputMode="decimal"
                                     placeholder="0.00"
                                     className="w-full mt-1 bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500"
                                 />
                             </div>
 
                             {/* CATEGORY */}
+
                             {modal === "create" && (
                                 <div>
                                     <label className="text-sm text-gray-400">
@@ -603,15 +597,19 @@ export default function ProductsPage() {
                                                         category.id
                                                     }
                                                 >
-                                                    {category.name}
+                                                    {
+                                                        category.name
+                                                    }
                                                 </option>
                                             )
                                         )}
+
                                     </select>
                                 </div>
                             )}
 
                             {/* DESCRIPTION */}
+
                             <div>
                                 <label className="text-sm text-gray-400">
                                     Description
@@ -631,6 +629,7 @@ export default function ProductsPage() {
                             </div>
 
                             {/* IMAGE */}
+
                             <div>
                                 <label className="text-sm text-gray-400">
                                     Product Image
@@ -639,8 +638,10 @@ export default function ProductsPage() {
                                 <input
                                     type="file"
                                     accept="image/*"
-                                    onChange={handleImageChange}
-                                    className="w-full mt-1 text-sm text-gray-400 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-white hover:file:bg-blue-500"
+                                    onChange={
+                                        handleImageChange
+                                    }
+                                    className="w-full mt-1 text-sm text-gray-400 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-white hover:file:bg-blue-500"
                                 />
 
                                 <p className="text-xs text-gray-500 mt-2">
@@ -648,8 +649,9 @@ export default function ProductsPage() {
                                 </p>
 
                                 {image && (
-                                    <p className="text-xs text-blue-400 mt-1">
-                                        Selected: {image.name}
+                                    <p className="text-xs text-blue-400 mt-1 break-all">
+                                        Selected:{" "}
+                                        {image.name}
                                     </p>
                                 )}
                             </div>
@@ -657,7 +659,8 @@ export default function ProductsPage() {
                         </div>
 
                         {/* FOOTER */}
-                        <div className="flex gap-3 p-6 border-t border-white/10">
+
+                        <div className="sticky bottom-0 bg-[#111827] flex gap-3 p-5 sm:p-6 border-t border-white/10">
 
                             <button
                                 onClick={closeModal}
