@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { api } from "@/lib/api";
-import Link from "next/dist/client/link";
 
 type Product = {
     id: number;
@@ -43,9 +43,7 @@ export default function PublicMenuPage() {
                 setLoading(true);
                 setError("");
 
-                const response = await api.get(
-                    `/menu/${slug}`
-                );
+                const response = await api.get(`/menu/${slug}`);
 
                 setMenu(response.data);
             } catch (error: any) {
@@ -53,7 +51,7 @@ export default function PublicMenuPage() {
 
                 setError(
                     error.response?.data?.message ||
-                    "Menu could not be loaded."
+                        "Menu could not be loaded."
                 );
             } finally {
                 setLoading(false);
@@ -71,9 +69,13 @@ export default function PublicMenuPage() {
 
     if (loading) {
         return (
-            <main className="min-h-screen bg-white flex items-center justify-center">
-                <div className="text-gray-500">
-                    Loading menu...
+            <main className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+                <div className="text-center">
+                    <div className="w-10 h-10 border-4 border-gray-200 border-t-gray-600 rounded-full animate-spin mx-auto mb-4" />
+
+                    <p className="text-gray-500 text-sm">
+                        Loading menu...
+                    </p>
                 </div>
             </main>
         );
@@ -85,9 +87,10 @@ export default function PublicMenuPage() {
 
     if (error || !menu) {
         return (
-            <main className="min-h-screen bg-white flex items-center justify-center px-6">
-                <div className="text-center">
-                    <div className="text-5xl mb-4">
+            <main className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+                <div className="text-center max-w-sm">
+
+                    <div className="text-6xl mb-5">
                         🍽️
                     </div>
 
@@ -95,9 +98,10 @@ export default function PublicMenuPage() {
                         Menu not found
                     </h1>
 
-                    <p className="text-gray-500 mt-2">
+                    <p className="text-gray-500 mt-2 text-sm leading-relaxed">
                         {error || "This menu does not exist."}
                     </p>
+
                 </div>
             </main>
         );
@@ -110,161 +114,334 @@ export default function PublicMenuPage() {
     return (
         <main
             className="min-h-screen bg-gray-50"
-            style={{
-                "--theme-color": menu.themeColor,
-            } as React.CSSProperties}
+            style={
+                {
+                    "--theme-color": menu.themeColor,
+                } as React.CSSProperties
+            }
         >
+
             {/* ========================= */}
             {/* HEADER */}
             {/* ========================= */}
 
             <header
-                className="text-white px-6 py-10 text-center"
+                className="
+                    text-white
+                    px-5
+                    sm:px-6
+                    py-8
+                    sm:py-10
+                    text-center
+                "
                 style={{
                     backgroundColor: menu.themeColor,
                 }}
             >
-                {menu.logoUrl && (
+
+                {/* LOGO */}
+
+                {menu.logoUrl ? (
                     <img
                         src={menu.logoUrl}
                         alt={menu.name}
-                        className="w-24 h-24 object-cover rounded-full mx-auto mb-4 border-4 border-white/30"
+                        className="
+                            w-20
+                            h-20
+                            sm:w-24
+                            sm:h-24
+                            object-cover
+                            rounded-full
+                            mx-auto
+                            mb-4
+                            border-4
+                            border-white/30
+                            shadow-lg
+                        "
                     />
+                ) : (
+                    <div
+                        className="
+                            w-20
+                            h-20
+                            sm:w-24
+                            sm:h-24
+                            rounded-full
+                            mx-auto
+                            mb-4
+                            bg-white/10
+                            border-4
+                            border-white/20
+                            flex
+                            items-center
+                            justify-center
+                            text-4xl
+                            shadow-lg
+                        "
+                    >
+                        🍽️
+                    </div>
                 )}
 
-                <h1 className="text-3xl font-bold">
+                {/* BUSINESS NAME */}
+
+                <h1 className="
+                    text-2xl
+                    sm:text-3xl
+                    font-bold
+                    tracking-tight
+                ">
                     {menu.name}
                 </h1>
 
-                <p className="text-white/80 mt-2">
+                <p className="text-white/80 mt-2 text-sm sm:text-base">
                     Our Menu
                 </p>
+
             </header>
 
             {/* ========================= */}
-            {/* CATEGORIES */}
+            {/* MENU CONTENT */}
             {/* ========================= */}
 
-            <div className="max-w-3xl mx-auto px-5 py-8">
+            <div
+                className="
+                    w-full
+                    max-w-3xl
+                    mx-auto
+                    px-4
+                    sm:px-5
+                    py-7
+                    sm:py-10
+                "
+            >
 
                 {menu.categories.length === 0 ? (
+
                     <div className="text-center py-16">
+
+                        <div className="text-5xl mb-4">
+                            🍽️
+                        </div>
+
                         <p className="text-gray-500">
                             No menu items available.
                         </p>
+
                     </div>
+
                 ) : (
-                    <div className="space-y-10">
 
-                        {menu.categories.map(
-                            (category) => (
-                                <section
-                                    key={category.id}
-                                >
-                                    {/* CATEGORY TITLE */}
+                    <div className="space-y-9 sm:space-y-10">
 
-                                    <div className="mb-5">
-                                        <h2
-                                            className="text-2xl font-bold"
-                                            style={{
-                                                color: menu.themeColor,
-                                            }}
-                                        >
-                                            {category.name}
-                                        </h2>
+                        {menu.categories.map((category) => (
 
-                                        <div
-                                            className="h-1 w-12 rounded-full mt-2"
-                                            style={{
-                                                backgroundColor:
-                                                    menu.themeColor,
-                                            }}
-                                        />
-                                    </div>
+                            <section
+                                key={category.id}
+                            >
 
-                                    {/* PRODUCTS */}
+                                {/* ========================= */}
+                                {/* CATEGORY HEADER */}
+                                {/* ========================= */}
 
-                                    {category.products.length === 0 ? (
-                                        <p className="text-gray-400 text-sm">
-                                            No products available.
-                                        </p>
-                                    ) : (
-                                        <div className="space-y-4">
+                                <div className="mb-4 sm:mb-5">
 
-                                            {category.products.map(
-                                                (product) => (
-                                                    <article
-                                                        key={
-                                                            product.id
-                                                        }
-                                                        className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm"
-                                                    >
-                                                        <div className="flex gap-4">
+                                    <h2
+                                        className="
+                                            text-xl
+                                            sm:text-2xl
+                                            font-bold
+                                            tracking-tight
+                                        "
+                                        style={{
+                                            color: menu.themeColor,
+                                        }}
+                                    >
+                                        {category.name}
+                                    </h2>
 
-                                                            {/* IMAGE */}
+                                    <div
+                                        className="
+                                            h-1
+                                            w-10
+                                            sm:w-12
+                                            rounded-full
+                                            mt-2
+                                        "
+                                        style={{
+                                            backgroundColor:
+                                                menu.themeColor,
+                                        }}
+                                    />
 
-                                                            {product.imageUrl && (
-                                                                <img
-                                                                    src={
-                                                                        product.imageUrl
-                                                                    }
-                                                                    alt={
+                                </div>
+
+                                {/* ========================= */}
+                                {/* PRODUCTS */}
+                                {/* ========================= */}
+
+                                {category.products.length === 0 ? (
+
+                                    <p className="text-gray-400 text-sm">
+                                        No products available.
+                                    </p>
+
+                                ) : (
+
+                                    <div className="space-y-3 sm:space-y-4">
+
+                                        {category.products.map(
+                                            (product) => (
+
+                                                <article
+                                                    key={product.id}
+                                                    className="
+                                                        bg-white
+                                                        rounded-2xl
+                                                        border
+                                                        border-gray-200
+                                                        p-3.5
+                                                        sm:p-4
+                                                        shadow-sm
+                                                        hover:shadow-md
+                                                        transition-shadow
+                                                    "
+                                                >
+
+                                                    <div className="flex gap-3 sm:gap-4">
+
+                                                        {/* ========================= */}
+                                                        {/* IMAGE */}
+                                                        {/* ========================= */}
+
+                                                        {product.imageUrl ? (
+
+                                                            <img
+                                                                src={
+                                                                    product.imageUrl
+                                                                }
+                                                                alt={
+                                                                    product.name
+                                                                }
+                                                                className="
+                                                                    w-24
+                                                                    h-24
+                                                                    sm:w-28
+                                                                    sm:h-28
+                                                                    rounded-xl
+                                                                    object-cover
+                                                                    flex-shrink-0
+                                                                "
+                                                            />
+
+                                                        ) : (
+
+                                                            <div
+                                                                className="
+                                                                    w-24
+                                                                    h-24
+                                                                    sm:w-28
+                                                                    sm:h-28
+                                                                    rounded-xl
+                                                                    flex-shrink-0
+                                                                    bg-gray-100
+                                                                    flex
+                                                                    items-center
+                                                                    justify-center
+                                                                    text-3xl
+                                                                    sm:text-4xl
+                                                                "
+                                                            >
+                                                                🍽️
+                                                            </div>
+
+                                                        )}
+
+                                                        {/* ========================= */}
+                                                        {/* INFO */}
+                                                        {/* ========================= */}
+
+                                                        <div className="
+                                                            flex-1
+                                                            min-w-0
+                                                            flex
+                                                            flex-col
+                                                        ">
+
+                                                            <div className="
+                                                                flex
+                                                                items-start
+                                                                justify-between
+                                                                gap-3
+                                                            ">
+
+                                                                <h3 className="
+                                                                    font-semibold
+                                                                    text-gray-900
+                                                                    text-base
+                                                                    sm:text-lg
+                                                                    leading-snug
+                                                                ">
+                                                                    {
                                                                         product.name
                                                                     }
-                                                                    className="w-24 h-24 rounded-xl object-cover flex-shrink-0"
-                                                                />
-                                                            )}
+                                                                </h3>
 
-                                                            {/* INFO */}
-
-                                                            <div className="flex-1 min-w-0">
-
-                                                                <div className="flex items-start justify-between gap-4">
-
-                                                                    <h3 className="font-semibold text-gray-900 text-lg">
-                                                                        {
-                                                                            product.name
-                                                                        }
-                                                                    </h3>
-
-                                                                    <span
-                                                                        className="font-bold whitespace-nowrap"
-                                                                        style={{
-                                                                            color:
-                                                                                menu.themeColor,
-                                                                        }}
-                                                                    >
-                                                                        ₺
-                                                                        {
-                                                                            product.price
-                                                                        }
-                                                                    </span>
-
-                                                                </div>
-
-                                                                {product.description && (
-                                                                    <p className="text-gray-500 text-sm mt-2">
-                                                                        {
-                                                                            product.description
-                                                                        }
-                                                                    </p>
-                                                                )}
+                                                                <span
+                                                                    className="
+                                                                        font-bold
+                                                                        text-sm
+                                                                        sm:text-base
+                                                                        whitespace-nowrap
+                                                                    "
+                                                                    style={{
+                                                                        color:
+                                                                            menu.themeColor,
+                                                                    }}
+                                                                >
+                                                                    ₺
+                                                                    {Number(
+                                                                        product.price
+                                                                    ).toFixed(2)}
+                                                                </span>
 
                                                             </div>
 
+                                                            {product.description && (
+
+                                                                <p className="
+                                                                    text-gray-500
+                                                                    text-xs
+                                                                    sm:text-sm
+                                                                    mt-2
+                                                                    leading-relaxed
+                                                                ">
+                                                                    {
+                                                                        product.description
+                                                                    }
+                                                                </p>
+
+                                                            )}
+
                                                         </div>
-                                                    </article>
-                                                )
-                                            )}
 
-                                        </div>
-                                    )}
+                                                    </div>
 
-                                </section>
-                            )
-                        )}
+                                                </article>
+
+                                            )
+                                        )}
+
+                                    </div>
+
+                                )}
+
+                            </section>
+
+                        ))}
 
                     </div>
+
                 )}
 
             </div>
@@ -273,18 +450,34 @@ export default function PublicMenuPage() {
             {/* FOOTER */}
             {/* ========================= */}
 
-            <footer className="text-center py-8 text-sm text-gray-400">
+            <footer className="
+                text-center
+                px-5
+                py-8
+                sm:py-10
+                text-xs
+                sm:text-sm
+                text-gray-400
+            ">
+
                 Powered by{" "}
+
                 <Link
                     href="/login"
-                    className="font-semibold hover:opacity-80 transition"
+                    className="
+                        font-semibold
+                        hover:opacity-80
+                        transition
+                    "
                     style={{
                         color: menu.themeColor,
                     }}
                 >
                     MenuM
                 </Link>
+
             </footer>
+
         </main>
     );
 }

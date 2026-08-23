@@ -1,24 +1,21 @@
 import axios from "axios";
 
 export const api = axios.create({
-    baseURL: "https://menum.onrender.com/api",
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
     withCredentials: true,
 });
 
-api.interceptors.request.use(
-    (config) => {
-        if (typeof window !== "undefined") {
-            const token = localStorage.getItem("token");
+api.interceptors.request.use((config) => {
+    if (typeof window !== "undefined") {
+        const token = localStorage.getItem("token");
 
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
         }
+    }
 
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
+    return config;
+});
 
 api.interceptors.response.use(
     (response) => response,

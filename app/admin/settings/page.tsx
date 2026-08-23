@@ -61,13 +61,15 @@ export default function SettingsPage() {
                 setBusinessName(currentUser.business.name);
                 setPhone(currentUser.business.phone || "");
                 setThemeColor(
-                    currentUser.business.themeColor
+                    currentUser.business.themeColor || "#8dbbf7"
                 );
             }
         } catch (error: any) {
+            console.error("Settings loading error:", error);
+
             alert(
                 error.response?.data?.message ||
-                "Failed to load settings."
+                    "Failed to load settings."
             );
         } finally {
             setLoading(false);
@@ -75,6 +77,11 @@ export default function SettingsPage() {
     }
 
     async function saveAccount() {
+        if (!username.trim()) {
+            alert("Username is required.");
+            return;
+        }
+
         try {
             setSaving(true);
 
@@ -86,9 +93,11 @@ export default function SettingsPage() {
 
             await loadSettings();
         } catch (error: any) {
+            console.error("Account update error:", error);
+
             alert(
                 error.response?.data?.message ||
-                "Failed to update account."
+                    "Failed to update account."
             );
         } finally {
             setSaving(false);
@@ -127,9 +136,11 @@ export default function SettingsPage() {
 
             alert("Password changed successfully.");
         } catch (error: any) {
+            console.error("Password change error:", error);
+
             alert(
                 error.response?.data?.message ||
-                "Failed to change password."
+                    "Failed to change password."
             );
         } finally {
             setSaving(false);
@@ -138,6 +149,11 @@ export default function SettingsPage() {
 
     async function saveBusiness() {
         if (!business) return;
+
+        if (!businessName.trim()) {
+            alert("Business name is required.");
+            return;
+        }
 
         try {
             setSaving(true);
@@ -152,9 +168,11 @@ export default function SettingsPage() {
 
             await loadSettings();
         } catch (error: any) {
+            console.error("Business update error:", error);
+
             alert(
                 error.response?.data?.message ||
-                "Failed to update business."
+                    "Failed to update business."
             );
         } finally {
             setSaving(false);
@@ -168,40 +186,50 @@ export default function SettingsPage() {
 
     if (loading) {
         return (
-            <div className="text-gray-400">
-                Loading settings...
+            <div className="min-h-[50vh] flex items-center justify-center px-4">
+                <div className="text-gray-400 text-sm sm:text-base">
+                    Loading settings...
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="max-w-5xl">
+        <div className="w-full max-w-5xl text-white">
 
+            {/* ================================================= */}
             {/* HEADER */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold">
+            {/* ================================================= */}
+
+            <div className="mb-6 sm:mb-8">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                     Settings
                 </h1>
 
-                <p className="text-gray-400 mt-1">
+                <p className="text-gray-400 text-sm sm:text-base mt-1">
                     Manage your account and preferences.
                 </p>
             </div>
 
+            {/* ================================================= */}
             {/* ACCOUNT */}
-            <section className="bg-[#111827] border border-white/10 rounded-2xl p-6 mb-6">
+            {/* ================================================= */}
 
-                <div className="mb-6">
-                    <h2 className="text-xl font-semibold">
+            <section className="bg-[#111827] border border-white/10 rounded-2xl p-4 sm:p-6 mb-5 sm:mb-6">
+
+                <div className="mb-5 sm:mb-6">
+                    <h2 className="text-lg sm:text-xl font-semibold">
                         Account
                     </h2>
 
-                    <p className="text-gray-500 text-sm mt-1">
+                    <p className="text-gray-500 text-xs sm:text-sm mt-1">
                         Manage your MenuM account.
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+
+                    {/* USERNAME */}
 
                     <div>
                         <label className="block text-sm text-gray-400 mb-2">
@@ -213,16 +241,18 @@ export default function SettingsPage() {
                             onChange={(e) =>
                                 setUsername(e.target.value)
                             }
-                            className="w-full bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500"
+                            className="w-full min-w-0 bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-sm sm:text-base text-white outline-none focus:border-blue-500 transition"
                         />
                     </div>
+
+                    {/* ROLE */}
 
                     <div>
                         <label className="block text-sm text-gray-400 mb-2">
                             Role
                         </label>
 
-                        <div className="w-full bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-gray-300">
+                        <div className="w-full bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-sm sm:text-base text-gray-300">
                             {user?.role === "SUPER_ADMIN"
                                 ? "Super Admin"
                                 : "Business Admin"}
@@ -234,28 +264,33 @@ export default function SettingsPage() {
                 <button
                     onClick={saveAccount}
                     disabled={saving}
-                    className="mt-5 bg-blue-600 hover:bg-blue-500 px-5 py-3 rounded-xl font-semibold disabled:opacity-50"
+                    className="w-full sm:w-auto mt-5 bg-blue-600 hover:bg-blue-500 px-5 py-3 rounded-xl font-semibold text-sm sm:text-base transition disabled:opacity-50"
                 >
-                    Save Account
+                    {saving ? "Saving..." : "Save Account"}
                 </button>
 
             </section>
 
+            {/* ================================================= */}
             {/* BUSINESS */}
-            {user?.role === "ADMIN" && business && (
-                <section className="bg-[#111827] border border-white/10 rounded-2xl p-6 mb-6">
+            {/* ================================================= */}
 
-                    <div className="mb-6">
-                        <h2 className="text-xl font-semibold">
+            {user?.role === "ADMIN" && business && (
+                <section className="bg-[#111827] border border-white/10 rounded-2xl p-4 sm:p-6 mb-5 sm:mb-6">
+
+                    <div className="mb-5 sm:mb-6">
+                        <h2 className="text-lg sm:text-xl font-semibold">
                             Business
                         </h2>
 
-                        <p className="text-gray-500 text-sm mt-1">
+                        <p className="text-gray-500 text-xs sm:text-sm mt-1">
                             Manage your business information.
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+
+                        {/* BUSINESS NAME */}
 
                         <div>
                             <label className="block text-sm text-gray-400 mb-2">
@@ -269,19 +304,23 @@ export default function SettingsPage() {
                                         e.target.value
                                     )
                                 }
-                                className="w-full bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500"
+                                className="w-full min-w-0 bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-sm sm:text-base text-white outline-none focus:border-blue-500 transition"
                             />
                         </div>
+
+                        {/* SLUG */}
 
                         <div>
                             <label className="block text-sm text-gray-400 mb-2">
                                 Slug
                             </label>
 
-                            <div className="w-full bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-gray-500">
+                            <div className="w-full bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-sm sm:text-base text-gray-500 overflow-hidden text-ellipsis">
                                 @{business.slug}
                             </div>
                         </div>
+
+                        {/* PHONE */}
 
                         <div>
                             <label className="block text-sm text-gray-400 mb-2">
@@ -293,16 +332,19 @@ export default function SettingsPage() {
                                 onChange={(e) =>
                                     setPhone(e.target.value)
                                 }
-                                className="w-full bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500"
+                                placeholder="+90..."
+                                className="w-full min-w-0 bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-sm sm:text-base text-white outline-none focus:border-blue-500 transition"
                             />
                         </div>
+
+                        {/* THEME COLOR */}
 
                         <div>
                             <label className="block text-sm text-gray-400 mb-2">
                                 Theme Color
                             </label>
 
-                            <div className="flex gap-3">
+                            <div className="flex gap-2 sm:gap-3">
 
                                 <input
                                     type="color"
@@ -312,7 +354,7 @@ export default function SettingsPage() {
                                             e.target.value
                                         )
                                     }
-                                    className="w-14 h-12 bg-transparent cursor-pointer"
+                                    className="w-12 h-12 sm:w-14 sm:h-12 shrink-0 bg-transparent cursor-pointer"
                                 />
 
                                 <input
@@ -322,7 +364,7 @@ export default function SettingsPage() {
                                             e.target.value
                                         )
                                     }
-                                    className="flex-1 bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-white outline-none"
+                                    className="flex-1 min-w-0 bg-[#0b1120] border border-white/10 rounded-xl px-3 sm:px-4 py-3 text-sm sm:text-base text-white outline-none focus:border-blue-500"
                                 />
 
                             </div>
@@ -330,14 +372,26 @@ export default function SettingsPage() {
 
                     </div>
 
-                    <div className="mt-6 grid md:grid-cols-2 gap-4">
+                    {/* SUBSCRIPTION INFO */}
+
+                    <div className="mt-5 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 
                         <div className="bg-[#0b1120] border border-white/5 rounded-xl p-4">
                             <p className="text-xs text-gray-500">
                                 Subscription
                             </p>
 
-                            <p className="mt-2 font-semibold">
+                            <p
+                                className={`mt-2 font-semibold text-sm sm:text-base ${
+                                    business.subscriptionStatus ===
+                                    "ACTIVE"
+                                        ? "text-green-400"
+                                        : business.subscriptionStatus ===
+                                          "TRIAL"
+                                        ? "text-blue-400"
+                                        : "text-red-400"
+                                }`}
+                            >
                                 {business.subscriptionStatus}
                             </p>
                         </div>
@@ -347,7 +401,7 @@ export default function SettingsPage() {
                                 Trial Ends
                             </p>
 
-                            <p className="mt-2 font-semibold">
+                            <p className="mt-2 font-semibold text-sm sm:text-base">
                                 {new Date(
                                     business.trialEndsAt
                                 ).toLocaleDateString("en-GB")}
@@ -359,28 +413,35 @@ export default function SettingsPage() {
                     <button
                         onClick={saveBusiness}
                         disabled={saving}
-                        className="mt-5 bg-blue-600 hover:bg-blue-500 px-5 py-3 rounded-xl font-semibold disabled:opacity-50"
+                        className="w-full sm:w-auto mt-5 bg-blue-600 hover:bg-blue-500 px-5 py-3 rounded-xl font-semibold text-sm sm:text-base transition disabled:opacity-50"
                     >
-                        Save Business
+                        {saving
+                            ? "Saving..."
+                            : "Save Business"}
                     </button>
 
                 </section>
             )}
 
-            {/* PASSWORD */}
-            <section className="bg-[#111827] border border-white/10 rounded-2xl p-6 mb-6">
+            {/* ================================================= */}
+            {/* SECURITY */}
+            {/* ================================================= */}
 
-                <div className="mb-6">
-                    <h2 className="text-xl font-semibold">
+            <section className="bg-[#111827] border border-white/10 rounded-2xl p-4 sm:p-6 mb-5 sm:mb-6">
+
+                <div className="mb-5 sm:mb-6">
+                    <h2 className="text-lg sm:text-xl font-semibold">
                         Security
                     </h2>
 
-                    <p className="text-gray-500 text-sm mt-1">
+                    <p className="text-gray-500 text-xs sm:text-sm mt-1">
                         Change your account password.
                     </p>
                 </div>
 
-                <div className="space-y-5 max-w-xl">
+                <div className="space-y-4 sm:space-y-5 w-full sm:max-w-xl">
+
+                    {/* CURRENT PASSWORD */}
 
                     <div>
                         <label className="block text-sm text-gray-400 mb-2">
@@ -395,9 +456,11 @@ export default function SettingsPage() {
                                     e.target.value
                                 )
                             }
-                            className="w-full bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500"
+                            className="w-full min-w-0 bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-sm sm:text-base text-white outline-none focus:border-blue-500 transition"
                         />
                     </div>
+
+                    {/* NEW PASSWORD */}
 
                     <div>
                         <label className="block text-sm text-gray-400 mb-2">
@@ -412,9 +475,11 @@ export default function SettingsPage() {
                                     e.target.value
                                 )
                             }
-                            className="w-full bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500"
+                            className="w-full min-w-0 bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-sm sm:text-base text-white outline-none focus:border-blue-500 transition"
                         />
                     </div>
+
+                    {/* CONFIRM PASSWORD */}
 
                     <div>
                         <label className="block text-sm text-gray-400 mb-2">
@@ -429,36 +494,41 @@ export default function SettingsPage() {
                                     e.target.value
                                 )
                             }
-                            className="w-full bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500"
+                            className="w-full min-w-0 bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-sm sm:text-base text-white outline-none focus:border-blue-500 transition"
                         />
                     </div>
 
                     <button
                         onClick={changePassword}
                         disabled={saving}
-                        className="bg-white/10 hover:bg-white/15 border border-white/10 px-5 py-3 rounded-xl font-semibold disabled:opacity-50"
+                        className="w-full sm:w-auto bg-white/10 hover:bg-white/15 border border-white/10 px-5 py-3 rounded-xl font-semibold text-sm sm:text-base transition disabled:opacity-50"
                     >
-                        Change Password
+                        {saving
+                            ? "Changing..."
+                            : "Change Password"}
                     </button>
 
                 </div>
 
             </section>
 
-            {/* DANGER ZONE */}
-            <section className="bg-red-500/5 border border-red-500/20 rounded-2xl p-6">
+            {/* ================================================= */}
+            {/* SESSION / DANGER ZONE */}
+            {/* ================================================= */}
 
-                <h2 className="text-xl font-semibold text-red-400">
+            <section className="bg-red-500/5 border border-red-500/20 rounded-2xl p-4 sm:p-6">
+
+                <h2 className="text-lg sm:text-xl font-semibold text-red-400">
                     Session
                 </h2>
 
-                <p className="text-gray-500 text-sm mt-1">
+                <p className="text-gray-500 text-xs sm:text-sm mt-1">
                     Sign out from this MenuM account.
                 </p>
 
                 <button
                     onClick={logout}
-                    className="mt-5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 px-5 py-3 rounded-xl font-semibold"
+                    className="w-full sm:w-auto mt-5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 px-5 py-3 rounded-xl font-semibold text-sm sm:text-base transition"
                 >
                     Logout
                 </button>

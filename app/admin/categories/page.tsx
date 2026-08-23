@@ -42,6 +42,8 @@ export default function CategoriesPage() {
     }
 
     function closeAddModal() {
+        if (loading) return;
+
         setName("");
         setShowAddModal(false);
     }
@@ -80,6 +82,8 @@ export default function CategoriesPage() {
     }
 
     function closeEditModal() {
+        if (loading) return;
+
         setEditingCategory(null);
         setEditingName("");
     }
@@ -145,32 +149,40 @@ export default function CategoriesPage() {
     return (
         <div className="min-h-screen text-white">
 
+            {/* ================================================= */}
             {/* HEADER */}
-            <div className="flex items-center justify-between mb-8">
+            {/* ================================================= */}
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
 
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                         Categories
                     </h1>
 
-                    <p className="text-gray-400 mt-1">
+                    <p className="text-gray-400 mt-1 text-sm sm:text-base">
                         Organize your menu into categories
                     </p>
                 </div>
 
                 <button
                     onClick={openAddModal}
-                    className="bg-blue-600 hover:bg-blue-500 transition px-5 py-3 rounded-xl font-semibold shadow-lg shadow-blue-600/20"
+                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 transition px-5 py-3 rounded-xl font-semibold shadow-lg shadow-blue-600/20"
                 >
                     + Add Category
                 </button>
 
             </div>
 
+            {/* ================================================= */}
             {/* STATS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+            {/* ================================================= */}
 
-                <div className="bg-[#111827] border border-white/10 rounded-2xl p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-6 sm:mb-8">
+
+                {/* TOTAL CATEGORIES */}
+
+                <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 sm:p-6">
 
                     <div className="flex items-center justify-between">
 
@@ -179,12 +191,12 @@ export default function CategoriesPage() {
                                 Total Categories
                             </p>
 
-                            <p className="text-4xl font-bold mt-2">
+                            <p className="text-3xl sm:text-4xl font-bold mt-2">
                                 {categories.length}
                             </p>
                         </div>
 
-                        <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-2xl">
+                        <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-xl sm:text-2xl">
                             📂
                         </div>
 
@@ -192,16 +204,19 @@ export default function CategoriesPage() {
 
                 </div>
 
-                <div className="bg-[#111827] border border-white/10 rounded-2xl p-6">
+                {/* MENU STRUCTURE */}
+
+                <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 sm:p-6">
 
                     <div className="flex items-center justify-between">
 
-                        <div>
+                        <div className="min-w-0">
+
                             <p className="text-gray-400 text-sm">
                                 Menu Structure
                             </p>
 
-                            <p className="text-lg font-semibold mt-3">
+                            <p className="text-base sm:text-lg font-semibold mt-3 break-words">
                                 {categories.length === 0
                                     ? "No categories created"
                                     : `${categories.length} ${
@@ -210,9 +225,10 @@ export default function CategoriesPage() {
                                               : "categories"
                                       } ready`}
                             </p>
+
                         </div>
 
-                        <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-2xl">
+                        <div className="flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl sm:text-2xl ml-4">
                             🗂️
                         </div>
 
@@ -222,26 +238,29 @@ export default function CategoriesPage() {
 
             </div>
 
+            {/* ================================================= */}
             {/* CATEGORY LIST */}
+            {/* ================================================= */}
+
             {categories.length === 0 ? (
 
-                <div className="bg-[#111827] border border-white/10 rounded-2xl p-16 text-center">
+                <div className="bg-[#111827] border border-white/10 rounded-2xl p-8 sm:p-16 text-center">
 
-                    <div className="text-5xl mb-4">
+                    <div className="text-4xl sm:text-5xl mb-4">
                         📂
                     </div>
 
-                    <h2 className="text-xl font-semibold">
+                    <h2 className="text-lg sm:text-xl font-semibold">
                         No categories yet
                     </h2>
 
-                    <p className="text-gray-400 mt-2 mb-6">
+                    <p className="text-gray-400 mt-2 mb-6 text-sm sm:text-base">
                         Create your first category to organize your menu.
                     </p>
 
                     <button
                         onClick={openAddModal}
-                        className="bg-blue-600 hover:bg-blue-500 px-5 py-3 rounded-xl font-semibold"
+                        className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 px-5 py-3 rounded-xl font-semibold"
                     >
                         + Create Category
                     </button>
@@ -250,48 +269,55 @@ export default function CategoriesPage() {
 
             ) : (
 
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
 
                     {categories.map((category, index) => (
 
                         <div
                             key={category.id}
-                            className="bg-[#111827] border border-white/10 rounded-2xl p-6 hover:border-white/20 transition"
+                            className="bg-[#111827] border border-white/10 rounded-2xl p-5 sm:p-6 hover:border-white/20 transition"
                         >
 
-                            <div className="flex items-start justify-between">
+                            {/* CATEGORY HEADER */}
 
-                                <div className="flex items-center gap-4">
+                            <div className="flex items-start justify-between gap-3">
 
-                                    <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl font-bold">
+                                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+
+                                    <div className="flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-lg sm:text-xl font-bold">
                                         {index + 1}
                                     </div>
 
-                                    <div>
-                                        <h2 className="font-bold text-lg">
+                                    <div className="min-w-0">
+
+                                        <h2 className="font-bold text-base sm:text-lg truncate">
                                             {category.name}
                                         </h2>
 
-                                        <p className="text-gray-500 text-sm mt-1">
+                                        <p className="text-gray-500 text-xs sm:text-sm mt-1">
                                             Category #{category.id}
                                         </p>
+
                                     </div>
 
                                 </div>
 
-                                <span className="text-xs px-3 py-1.5 rounded-full bg-green-500/10 text-green-400">
+                                <span className="flex-shrink-0 text-[10px] sm:text-xs px-2 sm:px-3 py-1.5 rounded-full bg-green-500/10 text-green-400">
                                     Active
                                 </span>
 
                             </div>
 
-                            <div className="flex gap-2 mt-6">
+                            {/* ACTIONS */}
+
+                            <div className="flex gap-2 mt-5 sm:mt-6">
 
                                 <button
                                     onClick={() =>
                                         openEditModal(category)
                                     }
-                                    className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-2.5 rounded-lg text-sm font-medium transition"
+                                    disabled={loading}
+                                    className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
                                 >
                                     Edit
                                 </button>
@@ -301,7 +327,7 @@ export default function CategoriesPage() {
                                         handleDelete(category.id)
                                     }
                                     disabled={loading}
-                                    className="px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                                    className="flex-1 sm:flex-none px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
                                 >
                                     Delete
                                 </button>
@@ -316,35 +342,56 @@ export default function CategoriesPage() {
 
             )}
 
+            {/* ================================================= */}
             {/* ADD MODAL */}
+            {/* ================================================= */}
+
             {showAddModal && (
 
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                <div
+                    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4"
+                    onMouseDown={(event) => {
+                        if (
+                            event.target ===
+                                event.currentTarget &&
+                            !loading
+                        ) {
+                            closeAddModal();
+                        }
+                    }}
+                >
 
-                    <div className="w-full max-w-md bg-[#111827] border border-white/10 rounded-2xl shadow-2xl">
+                    <div className="w-full sm:max-w-md bg-[#111827] border border-white/10 rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
 
-                        <div className="flex items-center justify-between p-6 border-b border-white/10">
+                        {/* MODAL HEADER */}
 
-                            <div>
-                                <h2 className="text-xl font-bold">
+                        <div className="flex items-center justify-between p-5 sm:p-6 border-b border-white/10">
+
+                            <div className="min-w-0">
+
+                                <h2 className="text-lg sm:text-xl font-bold">
                                     Add Category
                                 </h2>
 
-                                <p className="text-gray-400 text-sm mt-1">
+                                <p className="text-gray-400 text-xs sm:text-sm mt-1">
                                     Create a new menu category
                                 </p>
+
                             </div>
 
                             <button
                                 onClick={closeAddModal}
-                                className="text-gray-400 hover:text-white text-xl"
+                                disabled={loading}
+                                className="flex-shrink-0 ml-4 text-gray-400 hover:text-white text-xl disabled:opacity-50"
                             >
                                 ✕
                             </button>
 
                         </div>
 
-                        <div className="p-6">
+                        {/* MODAL BODY */}
+
+                        <div className="p-5 sm:p-6">
 
                             <label className="text-sm text-gray-400">
                                 Category name
@@ -357,7 +404,10 @@ export default function CategoriesPage() {
                                     setName(e.target.value)
                                 }
                                 onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
+                                    if (
+                                        e.key ===
+                                        "Enter"
+                                    ) {
                                         handleCreate();
                                     }
                                 }}
@@ -367,11 +417,14 @@ export default function CategoriesPage() {
 
                         </div>
 
-                        <div className="flex gap-3 p-6 border-t border-white/10">
+                        {/* MODAL FOOTER */}
+
+                        <div className="flex flex-col-reverse sm:flex-row gap-3 p-5 sm:p-6 border-t border-white/10">
 
                             <button
                                 onClick={closeAddModal}
-                                className="flex-1 bg-white/5 hover:bg-white/10 py-3 rounded-xl"
+                                disabled={loading}
+                                className="flex-1 bg-white/5 hover:bg-white/10 py-3 rounded-xl disabled:opacity-50"
                             >
                                 Cancel
                             </button>
@@ -394,35 +447,56 @@ export default function CategoriesPage() {
 
             )}
 
+            {/* ================================================= */}
             {/* EDIT MODAL */}
+            {/* ================================================= */}
+
             {editingCategory && (
 
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                <div
+                    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4"
+                    onMouseDown={(event) => {
+                        if (
+                            event.target ===
+                                event.currentTarget &&
+                            !loading
+                        ) {
+                            closeEditModal();
+                        }
+                    }}
+                >
 
-                    <div className="w-full max-w-md bg-[#111827] border border-white/10 rounded-2xl shadow-2xl">
+                    <div className="w-full sm:max-w-md bg-[#111827] border border-white/10 rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
 
-                        <div className="flex items-center justify-between p-6 border-b border-white/10">
+                        {/* MODAL HEADER */}
 
-                            <div>
-                                <h2 className="text-xl font-bold">
+                        <div className="flex items-center justify-between p-5 sm:p-6 border-b border-white/10">
+
+                            <div className="min-w-0">
+
+                                <h2 className="text-lg sm:text-xl font-bold">
                                     Edit Category
                                 </h2>
 
-                                <p className="text-gray-400 text-sm mt-1">
+                                <p className="text-gray-400 text-xs sm:text-sm mt-1">
                                     Update category information
                                 </p>
+
                             </div>
 
                             <button
                                 onClick={closeEditModal}
-                                className="text-gray-400 hover:text-white text-xl"
+                                disabled={loading}
+                                className="flex-shrink-0 ml-4 text-gray-400 hover:text-white text-xl disabled:opacity-50"
                             >
                                 ✕
                             </button>
 
                         </div>
 
-                        <div className="p-6">
+                        {/* MODAL BODY */}
+
+                        <div className="p-5 sm:p-6">
 
                             <label className="text-sm text-gray-400">
                                 Category name
@@ -432,10 +506,15 @@ export default function CategoriesPage() {
                                 autoFocus
                                 value={editingName}
                                 onChange={(e) =>
-                                    setEditingName(e.target.value)
+                                    setEditingName(
+                                        e.target.value
+                                    )
                                 }
                                 onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
+                                    if (
+                                        e.key ===
+                                        "Enter"
+                                    ) {
                                         handleUpdate();
                                     }
                                 }}
@@ -444,11 +523,14 @@ export default function CategoriesPage() {
 
                         </div>
 
-                        <div className="flex gap-3 p-6 border-t border-white/10">
+                        {/* MODAL FOOTER */}
+
+                        <div className="flex flex-col-reverse sm:flex-row gap-3 p-5 sm:p-6 border-t border-white/10">
 
                             <button
                                 onClick={closeEditModal}
-                                className="flex-1 bg-white/5 hover:bg-white/10 py-3 rounded-xl"
+                                disabled={loading}
+                                className="flex-1 bg-white/5 hover:bg-white/10 py-3 rounded-xl disabled:opacity-50"
                             >
                                 Cancel
                             </button>

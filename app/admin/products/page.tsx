@@ -1,7 +1,25 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+
+type DashboardData = {
+    business?: {
+        id: number;
+        name: string;
+        slug: string;
+        themeColor: string;
+        subscriptionStatus: "TRIAL" | "ACTIVE" | "EXPIRED";
+        trialEndsAt: string;
+        isActive: boolean;
+    };
+
+    stats?: {
+        categories: number;
+        products: number;
+        visibleProducts: number;
+    };
+};
 
 type Category = {
     id: number;
@@ -11,679 +29,709 @@ type Category = {
 type Product = {
     id: number;
     name: string;
-    description?: string;
     price: number;
-    imageUrl?: string;
     isVisible: boolean;
-    category?: Category;
+    imageUrl?: string;
+    category?: {
+        id: number;
+        name: string;
+    };
 };
 
-type FormMode = "create" | "edit" | null;
+type Role = "ADMIN" | "SUPER_ADMIN";
 
-export default function ProductsPage() {
-    const [products, setProducts] = useState<Product[]>([]);
-    const [categories, setCategories] = useState<Category[]>([]);
+export default function DashboardPage() {
+    const [role, setRole] = useState<Role | null>(null);
 
-    const [modal, setModal] = useState<FormMode>(null);
-    const [editingProduct, setEditingProduct] =
-        useState<Product | null>(null);
+    const [data, setData] =
+        useState<DashboardData | null>(null);
 
-    const [name, setName] = useState("");
-    const [description, setDescription] = useState("");
-    const [price, setPrice] = useState("");
-    const [categoryId, setCategoryId] = useState("");
-    const [image, setImage] = useState<File | null>(null);
+    const [categories, setCategories] =
+        useState<Category[]>([]);
 
-    const [loading, setLoading] = useState(false);
-    const [pageLoading, setPageLoading] = useState(true);
+    const [products, setProducts] =
+        useState<Product[]>([]);
+
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadData();
+        loadDashboard();
     }, []);
 
-    async function loadData() {
+    async function loadDashboard() {
         try {
-            setPageLoading(true);
+            setLoading(true);
 
-            await Promise.all([
-                loadProducts(),
-                loadCategories(),
-            ]);
-        } catch (error) {
-            console.error(error);
+            /*
+             * Önce kullanıcı rolünü öğreniyoruz.
+             */
+            const meResponse =
+                await api.get("/auth/me");
+
+            const user =
+                meResponse.data.user;
+
+            const userRole: Role =
+                user?.role ??
+                meResponse.data.role;
+
+            setRole(userRole);
+
+            /*
+             * Dashboard endpointi
+             */
+            try {
+                const dashboardResponse =
+                    await api.get("/dashboard");
+
+                setData(
+                    dashboardResponse.data.dashboard ??
+                    dashboardResponse.data
+                );
+            } catch (error) {
+                console.error(
+                    "Dashboard endpoint error:",
+                    error
+                );
+            }
+
+            /*
+             * Dashboard endpointinden stats gelmese bile
+             * sayfayı doldurabilmek için categories/products
+             * verilerini çekiyoruz.
+             */
+            try {
+                const categoriesResponse =
+                    await api.get("/categories");
+
+                setCategories(
+                    categoriesResponse.data.categories ??
+                    []
+                );
+            } catch (error) {
+                console.error(
+                    "Categories dashboard error:",
+                    error
+                );
+            }
+
+            try {
+                const productsResponse =
+                    await api.get("/products");
+
+                setProducts(
+                    productsResponse.data.products ??
+                    []
+                );
+            } catch (error) {
+                console.error(
+                    "Products dashboard error:",
+                    error
+                );
+            }
+
+        } catch (error: any) {
+            console.error(
+                "Dashboard loading error:",
+                error
+            );
+
+            alert(
+                error.response?.data?.message ??
+                "Failed to load dashboard."
+            );
         } finally {
-            setPageLoading(false);
+            setLoading(false);
         }
     }
 
-    async function loadProducts() {
-        try {
-            const response = await api.get("/products");
+    const totalProducts =
+        data?.stats?.products ??
+        products.length;
 
-            setProducts(response.data.products);
-        } catch (error) {
-            console.error("Failed to load products:", error);
-        }
-    }
+    const totalCategories =
+        data?.stats?.categories ??
+        categories.length;
 
-    async function loadCategories() {
-        try {
-            const response = await api.get("/categories");
+    const visibleProducts =
+        data?.stats?.visibleProducts ??
+        products.filter(
+            (product) => product.isVisible
+        ).length;
 
-            setCategories(response.data.categories);
-        } catch (error) {
-            console.error("Failed to load categories:", error);
-        }
-    }
+    const hiddenProducts =
+        totalProducts - visibleProducts;
 
-    function resetForm() {
-        setName("");
-        setDescription("");
-        setPrice("");
-        setCategoryId("");
-        setImage(null);
-    }
+    const business =
+        data?.business;
 
-    function openCreateModal() {
-        resetForm();
-        setEditingProduct(null);
-        setModal("create");
-    }
-
-    function openEditModal(product: Product) {
-        setEditingProduct(product);
-
-        setName(product.name);
-        setDescription(product.description || "");
-        setPrice(String(product.price));
-
-        setCategoryId(
-            product.category?.id
-                ? String(product.category.id)
-                : ""
-        );
-
-        setImage(null);
-        setModal("edit");
-    }
-
-    function closeModal() {
-        setModal(null);
-        setEditingProduct(null);
-        resetForm();
-    }
-
-    function handleImageChange(
-        event: ChangeEvent<HTMLInputElement>
+    function formatDate(
+        date?: string | null
     ) {
-        const file = event.target.files?.[0];
+        if (!date) return "-";
 
-        if (!file) {
-            setImage(null);
-            return;
-        }
-
-        if (!file.type.startsWith("image/")) {
-            alert("Please select an image file.");
-            return;
-        }
-
-        if (file.size > 5 * 1024 * 1024) {
-            alert("Image must be smaller than 5MB.");
-            return;
-        }
-
-        setImage(file);
+        return new Date(date)
+            .toLocaleDateString("en-GB");
     }
 
-    async function uploadImage(productId: number) {
-        if (!image) return;
+    function subscriptionClass(
+        status?: string
+    ) {
+        if (status === "ACTIVE") {
+            return "bg-green-500/10 text-green-400";
+        }
 
-        const formData = new FormData();
+        if (status === "TRIAL") {
+            return "bg-blue-500/10 text-blue-400";
+        }
 
-        formData.append("image", image);
+        return "bg-red-500/10 text-red-400";
+    }
 
-        await api.post(
-            `/products/${productId}/image`,
-            formData
+    /*
+     * Son eklenen ürünleri göster
+     */
+    const recentProducts =
+        [...products]
+            .reverse()
+            .slice(0, 5);
+
+    if (loading) {
+        return (
+            <div className="min-h-full text-white">
+
+                <div className="flex items-center justify-center min-h-[60vh]">
+
+                    <div className="text-center">
+
+                        <div className="w-10 h-10 border-4 border-white/10 border-t-blue-500 rounded-full animate-spin mx-auto" />
+
+                        <p className="text-gray-400 mt-4">
+                            Loading dashboard...
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
         );
     }
-
-    async function handleCreate() {
-        if (!name.trim() || !price || !categoryId) {
-            alert(
-                "Product name, price and category are required."
-            );
-            return;
-        }
-
-        try {
-            setLoading(true);
-
-            const response = await api.post(
-                `/products/${categoryId}`,
-                {
-                    name: name.trim(),
-                    description: description.trim(),
-                    price: Number(price),
-                }
-            );
-
-            const createdProduct = response.data.product;
-
-            if (image) {
-                await uploadImage(createdProduct.id);
-            }
-
-            closeModal();
-            await loadProducts();
-        } catch (error: any) {
-            console.error(error);
-
-            alert(
-                error.response?.data?.message ||
-                    "Failed to create product."
-            );
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    async function handleUpdate() {
-        if (!editingProduct) return;
-
-        if (!name.trim() || !price) {
-            alert("Product name and price are required.");
-            return;
-        }
-
-        try {
-            setLoading(true);
-
-            await api.put(
-                `/products/${editingProduct.id}`,
-                {
-                    name: name.trim(),
-                    description: description.trim(),
-                    price: Number(price),
-                }
-            );
-
-            if (image) {
-                await uploadImage(editingProduct.id);
-            }
-
-            closeModal();
-            await loadProducts();
-        } catch (error: any) {
-            console.error(error);
-
-            alert(
-                error.response?.data?.message ||
-                    "Failed to update product."
-            );
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    async function handleDelete(id: number) {
-        const confirmed = confirm(
-            "Are you sure you want to delete this product?"
-        );
-
-        if (!confirmed) return;
-
-        try {
-            setLoading(true);
-
-            await api.delete(`/products/${id}`);
-
-            await loadProducts();
-        } catch (error: any) {
-            console.error(error);
-
-            alert(
-                error.response?.data?.message ||
-                    "Failed to delete product."
-            );
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    async function toggleVisibility(product: Product) {
-        try {
-            await api.put(
-                `/products/${product.id}`,
-                {
-                    isVisible: !product.isVisible,
-                }
-            );
-
-            await loadProducts();
-        } catch (error: any) {
-            console.error(error);
-
-            alert(
-                error.response?.data?.message ||
-                    "Failed to update visibility."
-            );
-        }
-    }
-
-    const visibleProducts = products.filter(
-        (product) => product.isVisible
-    ).length;
 
     return (
         <div className="text-white">
 
+            {/* ================================================= */}
             {/* HEADER */}
-            <div className="flex items-center justify-between mb-8">
+            {/* ================================================= */}
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+
                 <div>
-                    <h1 className="text-3xl font-bold">
-                        Products
+
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                        Dashboard
                     </h1>
 
-                    <p className="text-gray-400 mt-1">
-                        Manage your menu products
+                    <p className="text-gray-400 mt-1 text-sm sm:text-base">
+                        {role === "SUPER_ADMIN"
+                            ? "Overview of your MenuM platform."
+                            : "Overview of your business and menu."}
                     </p>
+
                 </div>
 
                 <button
-                    onClick={openCreateModal}
-                    className="bg-blue-600 hover:bg-blue-500 px-5 py-3 rounded-xl font-semibold transition shadow-lg shadow-blue-600/20"
+                    onClick={loadDashboard}
+                    className="self-start sm:self-auto bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2.5 rounded-xl text-sm font-medium transition"
                 >
-                    + Add Product
+                    ↻ Refresh
                 </button>
-            </div>
-
-            {/* STATS */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-
-                <div className="bg-[#111827] border border-white/10 rounded-2xl p-5">
-                    <p className="text-gray-400 text-sm">
-                        Total Products
-                    </p>
-
-                    <p className="text-3xl font-bold mt-2">
-                        {products.length}
-                    </p>
-                </div>
-
-                <div className="bg-[#111827] border border-white/10 rounded-2xl p-5">
-                    <p className="text-gray-400 text-sm">
-                        Categories
-                    </p>
-
-                    <p className="text-3xl font-bold mt-2">
-                        {categories.length}
-                    </p>
-                </div>
-
-                <div className="bg-[#111827] border border-white/10 rounded-2xl p-5">
-                    <p className="text-gray-400 text-sm">
-                        Visible Products
-                    </p>
-
-                    <p className="text-3xl font-bold mt-2">
-                        {visibleProducts}
-                    </p>
-                </div>
 
             </div>
 
-            {/* LOADING */}
-            {pageLoading ? (
+            {/* ================================================= */}
+            {/* BUSINESS OVERVIEW */}
+            {/* ================================================= */}
 
-                <div className="bg-[#111827] border border-white/10 rounded-2xl p-16 text-center">
-                    <p className="text-gray-400">
-                        Loading products...
-                    </p>
-                </div>
+            {business && (
+                <div className="bg-[#111827] border border-white/10 rounded-2xl overflow-hidden mb-6">
 
-            ) : products.length === 0 ? (
+                    <div
+                        className="h-2"
+                        style={{
+                            backgroundColor:
+                                business.themeColor ||
+                                "#8dbbf7",
+                        }}
+                    />
 
-                /* EMPTY STATE */
-                <div className="bg-[#111827] border border-white/10 rounded-2xl p-16 text-center">
+                    <div className="p-5 sm:p-6">
 
-                    <div className="text-5xl mb-4">
-                        🍽️
-                    </div>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
 
-                    <h2 className="text-xl font-semibold">
-                        No products yet
-                    </h2>
+                            <div className="flex items-center gap-4 min-w-0">
 
-                    <p className="text-gray-400 mt-2 mb-6">
-                        Start building your menu by adding your
-                        first product.
-                    </p>
+                                <div
+                                    className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-xl flex items-center justify-center text-2xl"
+                                    style={{
+                                        backgroundColor:
+                                            `${business.themeColor || "#8dbbf7"}20`,
+                                    }}
+                                >
+                                    🏢
+                                </div>
 
-                    <button
-                        onClick={openCreateModal}
-                        className="bg-blue-600 hover:bg-blue-500 px-5 py-3 rounded-xl font-semibold transition"
-                    >
-                        + Add Your First Product
-                    </button>
+                                <div className="min-w-0">
 
-                </div>
+                                    <h2 className="text-lg sm:text-xl font-bold truncate">
+                                        {business.name}
+                                    </h2>
 
-            ) : (
+                                    <p className="text-gray-500 text-sm mt-1 truncate">
+                                        @{business.slug}
+                                    </p>
 
-                /* PRODUCTS */
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                                </div>
 
-                    {products.map((product) => (
+                            </div>
 
-                        <div
-                            key={product.id}
-                            className="bg-[#111827] border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition"
-                        >
+                            <div className="flex items-center gap-2">
 
-                            {/* IMAGE */}
-                            <div className="h-48 bg-[#0b1120] relative">
+                                <span
+                                    className={`text-xs px-3 py-1.5 rounded-full ${subscriptionClass(
+                                        business.subscriptionStatus
+                                    )}`}
+                                >
+                                    {business.subscriptionStatus}
+                                </span>
 
-                                {product.imageUrl ? (
-
-                                    <img
-                                        src={product.imageUrl}
-                                        alt={product.name}
-                                        className="w-full h-full object-cover"
-                                    />
-
-                                ) : (
-
-                                    <div className="w-full h-full flex items-center justify-center text-5xl">
-                                        🍽️
-                                    </div>
-
-                                )}
-
-                                {/* CATEGORY */}
-                                {product.category && (
-                                    <div className="absolute top-3 left-3">
-                                        <span className="bg-black/70 backdrop-blur text-white text-xs px-3 py-1.5 rounded-full">
-                                            {product.category.name}
-                                        </span>
-                                    </div>
-                                )}
-
-                                {/* VISIBILITY */}
-                                <button
-                                    onClick={() =>
-                                        toggleVisibility(product)
-                                    }
-                                    className={`absolute top-3 right-3 text-xs px-3 py-1.5 rounded-full backdrop-blur transition ${
-                                        product.isVisible
-                                            ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
-                                            : "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                                <span
+                                    className={`text-xs px-3 py-1.5 rounded-full ${
+                                        business.isActive
+                                            ? "bg-green-500/10 text-green-400"
+                                            : "bg-red-500/10 text-red-400"
                                     }`}
                                 >
-                                    {product.isVisible
-                                        ? "● Visible"
-                                        : "● Hidden"}
-                                </button>
-
-                            </div>
-
-                            {/* CONTENT */}
-                            <div className="p-5">
-
-                                <div className="flex justify-between gap-4">
-
-                                    <div className="min-w-0">
-
-                                        <h2 className="font-bold text-lg truncate">
-                                            {product.name}
-                                        </h2>
-
-                                        <p className="text-gray-400 text-sm mt-1 line-clamp-2">
-                                            {product.description ||
-                                                "No description"}
-                                        </p>
-
-                                    </div>
-
-                                    <span className="text-blue-400 font-bold whitespace-nowrap">
-                                        ₺
-                                        {Number(
-                                            product.price
-                                        ).toFixed(2)}
-                                    </span>
-
-                                </div>
-
-                                {/* ACTIONS */}
-                                <div className="flex gap-2 mt-5">
-
-                                    <button
-                                        onClick={() =>
-                                            openEditModal(product)
-                                        }
-                                        className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-2.5 rounded-lg text-sm font-medium transition"
-                                    >
-                                        Edit
-                                    </button>
-
-                                    <button
-                                        onClick={() =>
-                                            handleDelete(
-                                                product.id
-                                            )
-                                        }
-                                        disabled={loading}
-                                        className="px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
-                                    >
-                                        Delete
-                                    </button>
-
-                                </div>
+                                    {business.isActive
+                                        ? "Active"
+                                        : "Inactive"}
+                                </span>
 
                             </div>
 
                         </div>
 
-                    ))}
+                        {business.subscriptionStatus ===
+                            "TRIAL" && (
+                            <div className="mt-5 pt-5 border-t border-white/5">
+
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+
+                                    <p className="text-sm text-gray-400">
+                                        Trial ends
+                                    </p>
+
+                                    <p className="text-sm font-medium text-white">
+                                        {formatDate(
+                                            business.trialEndsAt
+                                        )}
+                                    </p>
+
+                                </div>
+
+                            </div>
+                        )}
+
+                    </div>
+
+                </div>
+            )}
+
+            {/* ================================================= */}
+            {/* STATS */}
+            {/* ================================================= */}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+
+                {/* PRODUCTS */}
+
+                <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 sm:p-6">
+
+                    <div className="flex items-center justify-between">
+
+                        <div>
+
+                            <p className="text-gray-400 text-sm">
+                                Total Products
+                            </p>
+
+                            <p className="text-3xl font-bold mt-2">
+                                {totalProducts}
+                            </p>
+
+                        </div>
+
+                        <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-2xl">
+                            🍽️
+                        </div>
+
+                    </div>
 
                 </div>
 
-            )}
+                {/* CATEGORIES */}
 
-            {/* MODAL */}
-            {modal && (
+                <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 sm:p-6">
 
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-                    onMouseDown={(event) => {
-                        if (
-                            event.target === event.currentTarget &&
-                            !loading
-                        ) {
-                            closeModal();
-                        }
-                    }}
-                >
+                    <div className="flex items-center justify-between">
 
-                    <div className="w-full max-w-lg bg-[#111827] border border-white/10 rounded-2xl shadow-2xl">
+                        <div>
 
-                        {/* MODAL HEADER */}
-                        <div className="flex items-center justify-between p-6 border-b border-white/10">
+                            <p className="text-gray-400 text-sm">
+                                Categories
+                            </p>
+
+                            <p className="text-3xl font-bold mt-2">
+                                {totalCategories}
+                            </p>
+
+                        </div>
+
+                        <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-2xl">
+                            📂
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {/* VISIBLE */}
+
+                <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 sm:p-6">
+
+                    <div className="flex items-center justify-between">
+
+                        <div>
+
+                            <p className="text-gray-400 text-sm">
+                                Visible Products
+                            </p>
+
+                            <p className="text-3xl font-bold mt-2">
+                                {visibleProducts}
+                            </p>
+
+                        </div>
+
+                        <div className="w-12 h-12 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center text-2xl">
+                            👁️
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {/* HIDDEN */}
+
+                <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 sm:p-6">
+
+                    <div className="flex items-center justify-between">
+
+                        <div>
+
+                            <p className="text-gray-400 text-sm">
+                                Hidden Products
+                            </p>
+
+                            <p className="text-3xl font-bold mt-2">
+                                {hiddenProducts}
+                            </p>
+
+                        </div>
+
+                        <div className="w-12 h-12 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center text-2xl">
+                            🙈
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {/* ================================================= */}
+            {/* CONTENT GRID */}
+            {/* ================================================= */}
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+
+                {/* ================================================= */}
+                {/* RECENT PRODUCTS */}
+                {/* ================================================= */}
+
+                <div className="xl:col-span-2 bg-[#111827] border border-white/10 rounded-2xl overflow-hidden">
+
+                    <div className="p-5 sm:p-6 border-b border-white/10">
+
+                        <div className="flex items-center justify-between">
 
                             <div>
-                                <h2 className="text-xl font-bold">
-                                    {modal === "create"
-                                        ? "Add Product"
-                                        : "Edit Product"}
+
+                                <h2 className="font-bold text-lg">
+                                    Recent Products
                                 </h2>
 
-                                <p className="text-gray-400 text-sm mt-1">
-                                    {modal === "create"
-                                        ? "Add a new item to your menu"
-                                        : "Update product information"}
+                                <p className="text-gray-500 text-sm mt-1">
+                                    Latest items in your menu
                                 </p>
+
                             </div>
 
-                            <button
-                                onClick={closeModal}
-                                disabled={loading}
-                                className="text-gray-400 hover:text-white text-xl disabled:opacity-50"
+                            <a
+                                href="/dashboard/products"
+                                className="text-blue-400 hover:text-blue-300 text-sm font-medium"
                             >
-                                ✕
-                            </button>
+                                View all
+                            </a>
 
                         </div>
 
-                        {/* FORM */}
-                        <div className="p-6 space-y-4">
+                    </div>
 
-                            {/* NAME */}
-                            <div>
-                                <label className="text-sm text-gray-400">
-                                    Product Name
-                                </label>
+                    {recentProducts.length === 0 ? (
 
-                                <input
-                                    value={name}
-                                    onChange={(e) =>
-                                        setName(e.target.value)
-                                    }
-                                    placeholder="e.g. Classic Burger"
-                                    className="w-full mt-1 bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500"
-                                />
+                        <div className="p-10 sm:p-14 text-center">
+
+                            <div className="text-4xl mb-3">
+                                🍽️
                             </div>
 
-                            {/* PRICE */}
-                            <div>
-                                <label className="text-sm text-gray-400">
-                                    Price
-                                </label>
+                            <p className="text-gray-300 font-medium">
+                                No products yet
+                            </p>
 
-                                <input
-                                    value={price}
-                                    onChange={(e) =>
-                                        setPrice(e.target.value)
-                                    }
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="0.00"
-                                    className="w-full mt-1 bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500"
-                                />
-                            </div>
+                            <p className="text-gray-500 text-sm mt-1">
+                                Add your first product to get started.
+                            </p>
 
-                            {/* CATEGORY */}
-                            {modal === "create" && (
-                                <div>
-                                    <label className="text-sm text-gray-400">
-                                        Category
-                                    </label>
+                        </div>
 
-                                    <select
-                                        value={categoryId}
-                                        onChange={(e) =>
-                                            setCategoryId(
-                                                e.target.value
-                                            )
+                    ) : (
+
+                        <div className="divide-y divide-white/5">
+
+                            {recentProducts.map(
+                                (product) => (
+
+                                    <div
+                                        key={
+                                            product.id
                                         }
-                                        className="w-full mt-1 bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500"
+                                        className="p-4 sm:p-5 flex items-center gap-4"
                                     >
-                                        <option value="">
-                                            Select category
-                                        </option>
 
-                                        {categories.map(
-                                            (category) => (
-                                                <option
-                                                    key={
-                                                        category.id
+                                        {/* IMAGE */}
+
+                                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-[#0b1120] shrink-0">
+
+                                            {product.imageUrl ? (
+
+                                                <img
+                                                    src={
+                                                        product.imageUrl
                                                     }
-                                                    value={
-                                                        category.id
+                                                    alt={
+                                                        product.name
                                                     }
-                                                >
-                                                    {category.name}
-                                                </option>
-                                            )
-                                        )}
-                                    </select>
-                                </div>
+                                                    className="w-full h-full object-cover"
+                                                />
+
+                                            ) : (
+
+                                                <div className="w-full h-full flex items-center justify-center text-xl">
+                                                    🍽️
+                                                </div>
+
+                                            )}
+
+                                        </div>
+
+                                        {/* INFO */}
+
+                                        <div className="flex-1 min-w-0">
+
+                                            <p className="font-semibold truncate">
+                                                {
+                                                    product.name
+                                                }
+                                            </p>
+
+                                            <p className="text-gray-500 text-sm mt-1 truncate">
+                                                {
+                                                    product.category
+                                                        ?.name ??
+                                                    "No category"
+                                                }
+                                            </p>
+
+                                        </div>
+
+                                        {/* PRICE */}
+
+                                        <div className="text-right shrink-0">
+
+                                            <p className="font-bold text-blue-400">
+                                                ₺
+                                                {Number(
+                                                    product.price
+                                                ).toFixed(2)}
+                                            </p>
+
+                                            <p
+                                                className={`text-xs mt-1 ${
+                                                    product.isVisible
+                                                        ? "text-green-400"
+                                                        : "text-red-400"
+                                                }`}
+                                            >
+                                                {product.isVisible
+                                                    ? "Visible"
+                                                    : "Hidden"}
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                )
                             )}
 
-                            {/* DESCRIPTION */}
-                            <div>
-                                <label className="text-sm text-gray-400">
-                                    Description
-                                </label>
+                        </div>
 
-                                <textarea
-                                    value={description}
-                                    onChange={(e) =>
-                                        setDescription(
-                                            e.target.value
-                                        )
-                                    }
-                                    placeholder="Describe your product..."
-                                    rows={3}
-                                    className="w-full mt-1 bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 resize-none"
-                                />
+                    )}
+
+                </div>
+
+                {/* ================================================= */}
+                {/* QUICK OVERVIEW */}
+                {/* ================================================= */}
+
+                <div className="bg-[#111827] border border-white/10 rounded-2xl overflow-hidden">
+
+                    <div className="p-5 sm:p-6 border-b border-white/10">
+
+                        <h2 className="font-bold text-lg">
+                            Menu Overview
+                        </h2>
+
+                        <p className="text-gray-500 text-sm mt-1">
+                            Quick information
+                        </p>
+
+                    </div>
+
+                    <div className="p-5 sm:p-6 space-y-5">
+
+                        {/* VISIBILITY */}
+
+                        <div>
+
+                            <div className="flex items-center justify-between mb-2">
+
+                                <span className="text-sm text-gray-400">
+                                    Product visibility
+                                </span>
+
+                                <span className="text-sm font-medium">
+                                    {totalProducts > 0
+                                        ? Math.round(
+                                              (visibleProducts /
+                                                  totalProducts) *
+                                                  100
+                                          )
+                                        : 0}
+                                    %
+                                </span>
+
                             </div>
 
-                            {/* IMAGE */}
-                            <div>
-                                <label className="text-sm text-gray-400">
-                                    Product Image
-                                </label>
+                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
 
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                    className="w-full mt-1 text-sm text-gray-400 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-white hover:file:bg-blue-500"
+                                <div
+                                    className="h-full bg-blue-500 rounded-full transition-all"
+                                    style={{
+                                        width: `${
+                                            totalProducts >
+                                            0
+                                                ? Math.min(
+                                                      100,
+                                                      (visibleProducts /
+                                                          totalProducts) *
+                                                          100
+                                                  )
+                                                : 0
+                                        }%`,
+                                    }}
                                 />
 
-                                <p className="text-xs text-gray-500 mt-2">
-                                    Maximum size: 5MB
-                                </p>
-
-                                {image && (
-                                    <p className="text-xs text-blue-400 mt-1">
-                                        Selected: {image.name}
-                                    </p>
-                                )}
                             </div>
 
                         </div>
 
-                        {/* FOOTER */}
-                        <div className="flex gap-3 p-6 border-t border-white/10">
+                        {/* CATEGORIES */}
 
-                            <button
-                                onClick={closeModal}
-                                disabled={loading}
-                                className="flex-1 bg-white/5 hover:bg-white/10 py-3 rounded-xl transition disabled:opacity-50"
-                            >
-                                Cancel
-                            </button>
+                        <div className="flex items-center justify-between py-3 border-b border-white/5">
 
-                            <button
-                                onClick={
-                                    modal === "create"
-                                        ? handleCreate
-                                        : handleUpdate
-                                }
-                                disabled={loading}
-                                className="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-semibold transition disabled:opacity-50"
-                            >
-                                {loading
-                                    ? modal === "create"
-                                        ? "Creating..."
-                                        : "Saving..."
-                                    : modal === "create"
-                                    ? "Create Product"
-                                    : "Save Changes"}
-                            </button>
+                            <span className="text-gray-400 text-sm">
+                                Categories
+                            </span>
+
+                            <span className="font-semibold">
+                                {totalCategories}
+                            </span>
+
+                        </div>
+
+                        {/* PRODUCTS */}
+
+                        <div className="flex items-center justify-between py-3 border-b border-white/5">
+
+                            <span className="text-gray-400 text-sm">
+                                Products
+                            </span>
+
+                            <span className="font-semibold">
+                                {totalProducts}
+                            </span>
+
+                        </div>
+
+                        {/* VISIBLE */}
+
+                        <div className="flex items-center justify-between py-3 border-b border-white/5">
+
+                            <span className="text-gray-400 text-sm">
+                                Visible
+                            </span>
+
+                            <span className="text-green-400 font-semibold">
+                                {visibleProducts}
+                            </span>
+
+                        </div>
+
+                        {/* HIDDEN */}
+
+                        <div className="flex items-center justify-between py-3">
+
+                            <span className="text-gray-400 text-sm">
+                                Hidden
+                            </span>
+
+                            <span className="text-red-400 font-semibold">
+                                {hiddenProducts}
+                            </span>
 
                         </div>
 
@@ -691,7 +739,103 @@ export default function ProductsPage() {
 
                 </div>
 
-            )}
+            </div>
+
+            {/* ================================================= */}
+            {/* QUICK ACTIONS */}
+            {/* ================================================= */}
+
+            <div className="mt-5 bg-[#111827] border border-white/10 rounded-2xl p-5 sm:p-6">
+
+                <h2 className="font-bold text-lg">
+                    Quick Actions
+                </h2>
+
+                <p className="text-gray-500 text-sm mt-1 mb-5">
+                    Manage your menu quickly
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+
+                    <a
+                        href="/dashboard/products"
+                        className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition"
+                    >
+
+                        <div className="text-2xl mb-3">
+                            🍽️
+                        </div>
+
+                        <p className="font-semibold">
+                            Products
+                        </p>
+
+                        <p className="text-gray-500 text-xs mt-1">
+                            Manage menu items
+                        </p>
+
+                    </a>
+
+                    <a
+                        href="/dashboard/categories"
+                        className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition"
+                    >
+
+                        <div className="text-2xl mb-3">
+                            📂
+                        </div>
+
+                        <p className="font-semibold">
+                            Categories
+                        </p>
+
+                        <p className="text-gray-500 text-xs mt-1">
+                            Organize your menu
+                        </p>
+
+                    </a>
+
+                    <a
+                        href="/dashboard/business"
+                        className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition"
+                    >
+
+                        <div className="text-2xl mb-3">
+                            🏢
+                        </div>
+
+                        <p className="font-semibold">
+                            Business
+                        </p>
+
+                        <p className="text-gray-500 text-xs mt-1">
+                            Business information
+                        </p>
+
+                    </a>
+
+                    <a
+                        href="/dashboard/menu"
+                        className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition"
+                    >
+
+                        <div className="text-2xl mb-3">
+                            📱
+                        </div>
+
+                        <p className="font-semibold">
+                            Menu
+                        </p>
+
+                        <p className="text-gray-500 text-xs mt-1">
+                            View your digital menu
+                        </p>
+
+                    </a>
+
+                </div>
+
+            </div>
 
         </div>
     );
