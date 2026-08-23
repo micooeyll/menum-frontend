@@ -179,7 +179,7 @@ export default function PublicMenuPage() {
                             shadow-lg
                         "
                     >
-                        🍽️
+                        <img src="/favicon.ico" alt="MenuM Logo" />
                     </div>
                 )}
 

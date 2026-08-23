@@ -373,66 +373,6 @@ export default function DashboardPage() {
 
             </div>
 
-            {/* MENU OVERVIEW */}
-            <div className="mt-8 bg-[#111827] border border-white/10 rounded-2xl p-6">
-
-                <div className="mb-6">
-
-                    <h2 className="text-lg font-bold">
-                        Menu Overview
-                    </h2>
-
-                    <p className="text-gray-400 text-sm mt-1">
-                        Your current menu structure
-                    </p>
-
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                    {/* CATEGORIES */}
-                    <div className="bg-[#0b1120] rounded-xl p-5 border border-white/5">
-
-                        <p className="text-gray-400 text-sm">
-                            Total categories
-                        </p>
-
-                        <p className="text-2xl font-bold mt-2">
-                            {stats.categories}
-                        </p>
-
-                    </div>
-
-                    {/* PRODUCTS PER CATEGORY */}
-                    <div className="bg-[#0b1120] rounded-xl p-5 border border-white/5">
-
-                        <p className="text-gray-400 text-sm">
-                            Products per category
-                        </p>
-
-                        <p className="text-2xl font-bold mt-2">
-                            {stats.productsPerCategory}
-                        </p>
-
-                    </div>
-
-                    {/* TOTAL MENU ITEMS */}
-                    <div className="bg-[#0b1120] rounded-xl p-5 border border-white/5">
-
-                        <p className="text-gray-400 text-sm">
-                            Total menu items
-                        </p>
-
-                        <p className="text-2xl font-bold mt-2">
-                            {stats.totalMenuItems}
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
         </div>
     );
 }
