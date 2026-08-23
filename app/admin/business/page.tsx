@@ -408,6 +408,9 @@ export default function BusinessPage() {
             const response =
                 await api.get(endpoint);
 
+            console.log("🔥 QR RESPONSE:", response.data);
+            console.log("🔥 MENU URL:", response.data.menuUrl);
+
             setQrCode(
                 response.data.qrCode ?? ""
             );
@@ -627,11 +630,10 @@ export default function BusinessPage() {
                                     </div>
 
                                     <span
-                                        className={`flex-shrink-0 text-[10px] sm:text-xs px-2 sm:px-3 py-1.5 rounded-full ${
-                                            business.isActive
+                                        className={`flex-shrink-0 text-[10px] sm:text-xs px-2 sm:px-3 py-1.5 rounded-full ${business.isActive
                                                 ? "bg-green-500/10 text-green-400"
                                                 : "bg-red-500/10 text-red-400"
-                                        }`}
+                                            }`}
                                     >
                                         {business.isActive
                                             ? "Active"
@@ -744,7 +746,7 @@ export default function BusinessPage() {
 
                                     {role === "SUPER_ADMIN" &&
                                         business.subscriptionStatus ===
-                                            "TRIAL" && (
+                                        "TRIAL" && (
                                             <button
                                                 onClick={() =>
                                                     handleEndTrial(
@@ -795,7 +797,7 @@ export default function BusinessPage() {
                         onMouseDown={(event) => {
                             if (
                                 event.target ===
-                                    event.currentTarget &&
+                                event.currentTarget &&
                                 !saving
                             ) {
                                 closeCreateModal();
@@ -1010,7 +1012,7 @@ export default function BusinessPage() {
                     onMouseDown={(event) => {
                         if (
                             event.target ===
-                                event.currentTarget &&
+                            event.currentTarget &&
                             !saving
                         ) {
                             closeEdit();
@@ -1175,7 +1177,7 @@ export default function BusinessPage() {
                     onMouseDown={(event) => {
                         if (
                             event.target ===
-                                event.currentTarget &&
+                            event.currentTarget &&
                             !qrLoading
                         ) {
                             closeQr();
