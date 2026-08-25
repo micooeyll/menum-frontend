@@ -96,7 +96,7 @@ export default function LoginPage() {
                     </div>
 
                     <p className="text-xs text-gray-600">
-                        MenuM Admin Panel
+                        meno Admin Panel
                     </p>
                 </div>
 
@@ -193,7 +193,7 @@ export default function LoginPage() {
 
                         <div className="mt-8 pt-6 border-t border-white/5 text-center">
                             <p className="text-xs text-gray-600">
-                                Secure MenuM Administration
+                                Secure meno Administration
                             </p>
                         </div>
 
