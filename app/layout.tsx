@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "MenuM Admin",
-    description: "MenuM Admin Panel",
+    title: "meno Admin",
+    description: "meno Admin Panel",
 };
 
 export default function RootLayout({

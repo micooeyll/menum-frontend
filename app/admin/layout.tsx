@@ -413,7 +413,7 @@ export default function AdminLayout({
                                             : pathname.includes("/settings")
                                                 ? "Settings"
 
-                                                : "MenuM"}
+                                                : "meno"}
 
                         </h1>
 

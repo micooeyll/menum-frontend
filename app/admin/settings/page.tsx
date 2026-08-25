@@ -223,7 +223,7 @@ export default function SettingsPage() {
                     </h2>
 
                     <p className="text-gray-500 text-xs sm:text-sm mt-1">
-                        Manage your MenuM account.
+                        Manage your meno account.
                     </p>
                 </div>
 
@@ -523,7 +523,7 @@ export default function SettingsPage() {
                 </h2>
 
                 <p className="text-gray-500 text-xs sm:text-sm mt-1">
-                    Sign out from this MenuM account.
+                    Sign out from this meno account.
                 </p>
 
                 <button

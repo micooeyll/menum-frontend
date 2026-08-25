@@ -6,132 +6,190 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 
 type Product = {
-    id: number;
-    name: string;
-    description?: string | null;
-    price: number | string;
-    imageUrl?: string | null;
-    isVisible: boolean;
+id: number;
+name: string;
+description?: string | null;
+price: number | string;
+imageUrl?: string | null;
+isVisible: boolean;
 };
 
 type Category = {
-    id: number;
-    name: string;
-    products: Product[];
+id: number;
+name: string;
+products: Product[];
 };
 
 type Menu = {
-    id: number;
-    name: string;
-    logoUrl?: string | null;
-    themeColor: string;
-    categories: Category[];
+id: number;
+name: string;
+logoUrl?: string | null;
+themeColor: string;
+currency: string;
+
+// WIFI
+wifiName?: string | null;
+wifiPassword?: string | null;
+
+categories: Category[];
+
 };
 
 export default function PublicMenuPage() {
-    const params = useParams();
+const params = useParams();
 
-    const slug = params.slug as string;
+const slug = params.slug as string;
 
-    const [menu, setMenu] = useState<Menu | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+const [menu, setMenu] = useState<Menu | null>(null);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState("");
 
-    useEffect(() => {
-        async function loadMenu() {
-            try {
-                setLoading(true);
-                setError("");
+useEffect(() => {
+    async function loadMenu() {
+        try {
+            setLoading(true);
+            setError("");
 
-                const response = await api.get(`/menu/${slug}`);
+            const response = await api.get(`/menu/${slug}`);
 
-                setMenu(response.data);
-            } catch (error: any) {
-                console.error("Menu error:", error);
+            console.log("🍽️ PUBLIC MENU RESPONSE:", response.data);
 
-                setError(
-                    error.response?.data?.message ||
-                        "Menu could not be loaded."
-                );
-            } finally {
-                setLoading(false);
-            }
+            setMenu(response.data);
+        } catch (error: any) {
+            console.error("Menu error:", error);
+
+            setError(
+                error.response?.data?.message ||
+                    "Menu could not be loaded."
+            );
+        } finally {
+            setLoading(false);
         }
-
-        if (slug) {
-            loadMenu();
-        }
-    }, [slug]);
-
-    // =========================
-    // LOADING
-    // =========================
-
-    if (loading) {
-        return (
-            <main className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
-                <div className="text-center">
-                    <div className="w-10 h-10 border-4 border-gray-200 border-t-gray-600 rounded-full animate-spin mx-auto mb-4" />
-
-                    <p className="text-gray-500 text-sm">
-                        Loading menu...
-                    </p>
-                </div>
-            </main>
-        );
     }
 
-    // =========================
-    // ERROR
-    // =========================
-
-    if (error || !menu) {
-        return (
-            <main className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
-                <div className="text-center max-w-sm">
-
-                    <div className="text-6xl mb-5">
-                        🍽️
-                    </div>
-
-                    <h1 className="text-2xl font-bold text-gray-900">
-                        Menu not found
-                    </h1>
-
-                    <p className="text-gray-500 mt-2 text-sm leading-relaxed">
-                        {error || "This menu does not exist."}
-                    </p>
-
-                </div>
-            </main>
-        );
+    if (slug) {
+        loadMenu();
     }
+}, [slug]);
 
-    // =========================
-    // MENU
-    // =========================
-
+if (loading) {
     return (
-        <main
-            className="min-h-screen bg-gray-50"
-            style={
-                {
-                    "--theme-color": menu.themeColor,
-                } as React.CSSProperties
-            }
-        >
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+            <div className="text-center">
+                <div className="w-10 h-10 border-4 border-gray-200 border-t-gray-600 rounded-full animate-spin mx-auto mb-4" />
 
-            {/* ========================= */}
+                <p className="text-gray-500 text-sm">
+                    Loading menu...
+                </p>
+            </div>
+        </main>
+    );
+}
+
+if (error || !menu) {
+    return (
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+            <div className="text-center max-w-sm">
+                <div className="text-6xl mb-5">
+                    🍽️
+                </div>
+
+                <h1 className="text-2xl font-bold text-gray-900">
+                    Menu not found
+                </h1>
+
+                <p className="text-gray-500 mt-2 text-sm leading-relaxed">
+                    {error || "This menu does not exist."}
+                </p>
+            </div>
+        </main>
+    );
+}
+
+const hasWifi =
+    Boolean(menu.wifiName?.trim()) ||
+    Boolean(menu.wifiPassword?.trim());
+
+return (
+    <main
+        className="
+            min-h-screen
+            relative
+            overflow-hidden
+            bg-[#f8fafc]
+        "
+        style={
+            {
+                "--theme-color": menu.themeColor,
+            } as React.CSSProperties
+        }
+    >
+        {/* BACKGROUND DECORATION */}
+
+        <div
+            className="
+                pointer-events-none
+                absolute
+                -top-32
+                -right-32
+                w-72
+                h-72
+                rounded-full
+                blur-3xl
+                opacity-10
+            "
+            style={{
+                backgroundColor: menu.themeColor,
+            }}
+        />
+
+        <div
+            className="
+                pointer-events-none
+                absolute
+                top-[420px]
+                -left-40
+                w-80
+                h-80
+                rounded-full
+                blur-3xl
+                opacity-[0.06]
+            "
+            style={{
+                backgroundColor: menu.themeColor,
+            }}
+        />
+
+        <div
+            className="
+                pointer-events-none
+                absolute
+                bottom-0
+                right-0
+                w-64
+                h-64
+                rounded-full
+                blur-3xl
+                opacity-[0.05]
+            "
+            style={{
+                backgroundColor: menu.themeColor,
+            }}
+        />
+
+        <div className="relative z-10">
+
+            {/* ================================================= */}
             {/* HEADER */}
-            {/* ========================= */}
+            {/* ================================================= */}
 
             <header
                 className="
                     text-white
                     px-5
                     sm:px-6
-                    py-8
-                    sm:py-10
+                    py-9
+                    sm:py-12
                     text-center
                 "
                 style={{
@@ -139,58 +197,81 @@ export default function PublicMenuPage() {
                 }}
             >
 
+                {/* ================================================= */}
                 {/* LOGO */}
+                {/* ================================================= */}
 
                 {menu.logoUrl ? (
-                    <img
-                        src={menu.logoUrl}
-                        alt={menu.name}
+                    <div
                         className="
-                            w-20
-                            h-20
-                            sm:w-24
-                            sm:h-24
-                            object-cover
-                            rounded-full
+                            w-24
+                            h-24
+                            sm:w-28
+                            sm:h-28
                             mx-auto
-                            mb-4
+                            mb-5
+                            rounded-full
+                            overflow-hidden
+                            bg-white
                             border-4
                             border-white/30
-                            shadow-lg
+                            shadow-xl
                         "
-                    />
+                    >
+                        <img
+                            src={menu.logoUrl}
+                            alt={`${menu.name} logo`}
+                            className="
+                                w-full
+                                h-full
+                                object-cover
+                            "
+                        />
+                    </div>
                 ) : (
                     <div
                         className="
-                            w-20
-                            h-20
-                            sm:w-24
-                            sm:h-24
-                            rounded-full
+                            w-24
+                            h-24
+                            sm:w-28
+                            sm:h-28
                             mx-auto
-                            mb-4
-                            bg-white/10
+                            mb-5
+                            rounded-full
+                            overflow-hidden
+                            bg-white
                             border-4
-                            border-white/20
+                            border-white/30
+                            shadow-xl
                             flex
                             items-center
                             justify-center
-                            text-4xl
-                            shadow-lg
                         "
                     >
-                        <img src="/favicon.ico" alt="MenuM Logo" />
+                        <img
+                            src="/favicon.ico"
+                            alt="meno"
+                            className="
+                                w-14
+                                h-14
+                                sm:w-16
+                                sm:h-16
+                                object-contain
+                            "
+                        />
                     </div>
                 )}
 
                 {/* BUSINESS NAME */}
 
-                <h1 className="
-                    text-2xl
-                    sm:text-3xl
-                    font-bold
-                    tracking-tight
-                ">
+                <h1
+                    className="
+                        text-2xl
+                        sm:text-3xl
+                        font-bold
+                        tracking-tight
+                    "
+                >
                     {menu.name}
                 </h1>
 
@@ -198,11 +279,84 @@ export default function PublicMenuPage() {
                     Our Menu
                 </p>
 
+                {/* ================================================= */}
+                {/* WIFI */}
+                {/* ================================================= */}
+
+                {hasWifi && (
+                    <div className="mt-6 max-w-sm mx-auto">
+                        <div
+                            className="
+                                bg-white/10
+                                backdrop-blur-md
+                                border
+                                border-white/20
+                                rounded-2xl
+                                p-4
+                                text-left
+                                shadow-lg
+                            "
+                        >
+                            <div className="flex items-center gap-3">
+
+                                {/* WIFI ICON */}
+
+                                <div
+                                    className="
+                                        w-11
+                                        h-11
+                                        rounded-xl
+                                        bg-white
+                                        flex
+                                        items-center
+                                        justify-center
+                                        flex-shrink-0
+                                        text-xl
+                                    "
+                                >
+                                    📶
+                                </div>
+
+                                {/* WIFI NAME */}
+
+                                <div className="min-w-0">
+                                    <p className="text-xs text-white/60 uppercase tracking-wider">
+                                        Free Wi-Fi
+                                    </p>
+
+                                    {menu.wifiName && (
+                                        <p className="text-sm sm:text-base font-semibold mt-1 break-all">
+                                            {menu.wifiName}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* PASSWORD */}
+
+                            {menu.wifiPassword && (
+                                <div className="mt-4 pt-3 border-t border-white/10">
+
+                                    <p className="text-xs text-white/60">
+                                        Password
+                                    </p>
+
+                                    <p className="text-sm font-medium mt-1 break-all">
+                                        {menu.wifiPassword}
+                                    </p>
+
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+                )}
+
             </header>
 
-            {/* ========================= */}
+            {/* ================================================= */}
             {/* MENU CONTENT */}
-            {/* ========================= */}
+            {/* ================================================= */}
 
             <div
                 className="
@@ -240,9 +394,7 @@ export default function PublicMenuPage() {
                                 key={category.id}
                             >
 
-                                {/* ========================= */}
                                 {/* CATEGORY HEADER */}
-                                {/* ========================= */}
 
                                 <div className="mb-4 sm:mb-5">
 
@@ -263,8 +415,7 @@ export default function PublicMenuPage() {
                                     <div
                                         className="
                                             h-1
-                                            w-10
-                                            sm:w-12
+                                            w-12
                                             rounded-full
                                             mt-2
                                         "
@@ -276,9 +427,7 @@ export default function PublicMenuPage() {
 
                                 </div>
 
-                                {/* ========================= */}
                                 {/* PRODUCTS */}
-                                {/* ========================= */}
 
                                 {category.products.length === 0 ? (
 
@@ -310,9 +459,7 @@ export default function PublicMenuPage() {
 
                                                     <div className="flex gap-3 sm:gap-4">
 
-                                                        {/* ========================= */}
-                                                        {/* IMAGE */}
-                                                        {/* ========================= */}
+                                                        {/* PRODUCT IMAGE */}
 
                                                         {product.imageUrl ? (
 
@@ -357,31 +504,35 @@ export default function PublicMenuPage() {
 
                                                         )}
 
-                                                        {/* ========================= */}
-                                                        {/* INFO */}
-                                                        {/* ========================= */}
+                                                        {/* PRODUCT INFO */}
 
-                                                        <div className="
-                                                            flex-1
-                                                            min-w-0
-                                                            flex
-                                                            flex-col
-                                                        ">
-
-                                                            <div className="
+                                                        <div
+                                                            className="
+                                                                flex-1
+                                                                min-w-0
                                                                 flex
-                                                                items-start
-                                                                justify-between
-                                                                gap-3
-                                                            ">
+                                                                flex-col
+                                                            "
+                                                        >
 
-                                                                <h3 className="
-                                                                    font-semibold
-                                                                    text-gray-900
-                                                                    text-base
-                                                                    sm:text-lg
-                                                                    leading-snug
-                                                                ">
+                                                            <div
+                                                                className="
+                                                                    flex
+                                                                    items-start
+                                                                    justify-between
+                                                                    gap-3
+                                                                "
+                                                            >
+
+                                                                <h3
+                                                                    className="
+                                                                        font-semibold
+                                                                        text-gray-900
+                                                                        text-base
+                                                                        sm:text-lg
+                                                                        leading-snug
+                                                                    "
+                                                                >
                                                                     {
                                                                         product.name
                                                                     }
@@ -399,23 +550,34 @@ export default function PublicMenuPage() {
                                                                             menu.themeColor,
                                                                     }}
                                                                 >
-                                                                    ₺
-                                                                    {Number(
-                                                                        product.price
-                                                                    ).toFixed(2)}
+                                                                    {new Intl.NumberFormat(
+                                                                        "en-US",
+                                                                        {
+                                                                            style:
+                                                                                "currency",
+                                                                            currency:
+                                                                                menu.currency,
+                                                                        }
+                                                                    ).format(
+                                                                        Number(
+                                                                            product.price
+                                                                        )
+                                                                    )}
                                                                 </span>
 
                                                             </div>
 
                                                             {product.description && (
 
-                                                                <p className="
-                                                                    text-gray-500
-                                                                    text-xs
-                                                                    sm:text-sm
-                                                                    mt-2
-                                                                    leading-relaxed
-                                                                ">
+                                                                <p
+                                                                    className="
+                                                                        text-gray-500
+                                                                        text-xs
+                                                                        sm:text-sm
+                                                                        mt-2
+                                                                        leading-relaxed
+                                                                    "
+                                                                >
                                                                     {
                                                                         product.description
                                                                     }
@@ -446,19 +608,21 @@ export default function PublicMenuPage() {
 
             </div>
 
-            {/* ========================= */}
+            {/* ================================================= */}
             {/* FOOTER */}
-            {/* ========================= */}
+            {/* ================================================= */}
 
-            <footer className="
-                text-center
-                px-5
-                py-8
-                sm:py-10
-                text-xs
-                sm:text-sm
-                text-gray-400
-            ">
+            <footer
+                className="
+                    text-center
+                    px-5
+                    py-8
+                    sm:py-10
+                    text-xs
+                    sm:text-sm
+                    text-gray-400
+                "
+            >
 
                 Powered by{" "}
 
@@ -473,11 +637,13 @@ export default function PublicMenuPage() {
                         color: menu.themeColor,
                     }}
                 >
-                    MenuM
+                    meno
                 </Link>
 
             </footer>
 
-        </main>
-    );
+        </div>
+    </main>
+);
+
 }

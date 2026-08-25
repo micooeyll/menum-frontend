@@ -5,12 +5,20 @@ import { api } from "@/lib/api";
 
 type Role = "ADMIN" | "SUPER_ADMIN";
 
+type WifiSecurity = "WPA" | "WPA2";
+
 type Business = {
     id: number;
     name: string;
     slug: string;
     phone?: string | null;
     themeColor: string;
+    currency: string;
+
+    wifiName?: string | null;
+    wifiPassword?: string | null;
+    wifiSecurity?: WifiSecurity | null;
+
     subscriptionStatus: "TRIAL" | "ACTIVE" | "EXPIRED";
     trialEndsAt: string;
     isActive: boolean;
@@ -33,7 +41,13 @@ export default function BusinessPage() {
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
     const [themeColor, setThemeColor] = useState("#8dbbf7");
+    const [currency, setCurrency] = useState("TRY");
     const [isActive, setIsActive] = useState(true);
+
+    const [wifiName, setWifiName] = useState("");
+    const [wifiPassword, setWifiPassword] = useState("");
+    const [wifiSecurity, setWifiSecurity] =
+        useState<WifiSecurity>("WPA2");
 
     // =====================================================
     // CREATE
@@ -46,6 +60,14 @@ export default function BusinessPage() {
     const [createPhone, setCreatePhone] = useState("");
     const [createThemeColor, setCreateThemeColor] =
         useState("#8dbbf7");
+    const [createCurrency, setCreateCurrency] =
+        useState("TRY");
+
+    const [createWifiName, setCreateWifiName] = useState("");
+    const [createWifiPassword, setCreateWifiPassword] =
+        useState("");
+    const [createWifiSecurity, setCreateWifiSecurity] =
+        useState<WifiSecurity>("WPA2");
 
     const [adminUsername, setAdminUsername] = useState("");
     const [adminPassword, setAdminPassword] = useState("");
@@ -108,7 +130,6 @@ export default function BusinessPage() {
             }
 
             throw new Error("Invalid user role.");
-
         } catch (error: any) {
             console.error(
                 "Business loading error:",
@@ -133,6 +154,12 @@ export default function BusinessPage() {
         setCreateSlug("");
         setCreatePhone("");
         setCreateThemeColor("#8dbbf7");
+        setCreateCurrency("TRY");
+
+        setCreateWifiName("");
+        setCreateWifiPassword("");
+        setCreateWifiSecurity("WPA2");
+
         setAdminUsername("");
         setAdminPassword("");
     }
@@ -169,6 +196,16 @@ export default function BusinessPage() {
             return;
         }
 
+        if (
+            createWifiName.trim() &&
+            !createWifiPassword.trim()
+        ) {
+            alert(
+                "Please enter a Wi-Fi password or leave the Wi-Fi name empty."
+            );
+            return;
+        }
+
         try {
             setSaving(true);
 
@@ -176,15 +213,34 @@ export default function BusinessPage() {
                 "/businesses",
                 {
                     name: createName.trim(),
+
                     slug: createSlug
                         .trim()
                         .toLowerCase(),
+
                     phone:
                         createPhone.trim() ||
                         undefined,
+
                     themeColor: createThemeColor,
+                    currency: createCurrency,
+
+                    wifiName:
+                        createWifiName.trim() ||
+                        undefined,
+
+                    wifiPassword:
+                        createWifiPassword.trim() ||
+                        undefined,
+
+                    wifiSecurity:
+                        createWifiName.trim()
+                            ? createWifiSecurity
+                            : undefined,
+
                     adminUsername:
                         adminUsername.trim(),
+
                     adminPassword,
                 }
             );
@@ -204,7 +260,6 @@ export default function BusinessPage() {
                 `Admin username: ${createdAdmin?.username ?? adminUsername}\n` +
                 `Password: ${adminPassword}`
             );
-
         } catch (error: any) {
             console.error(
                 "Create business error:",
@@ -229,20 +284,44 @@ export default function BusinessPage() {
 
         setName(business.name);
         setPhone(business.phone ?? "");
+
         setThemeColor(
             business.themeColor || "#8dbbf7"
         );
+
+        setCurrency(
+            business.currency || "TRY"
+        );
+
         setIsActive(business.isActive);
+
+        setWifiName(
+            business.wifiName ?? ""
+        );
+
+        // Passwords should normally not be returned
+        // from the backend. Admin can enter a new one.
+        setWifiPassword("");
+
+        setWifiSecurity(
+            business.wifiSecurity || "WPA2"
+        );
     }
 
     function closeEdit() {
         if (saving) return;
 
         setEditingBusiness(null);
+
         setName("");
         setPhone("");
         setThemeColor("#8dbbf7");
+        setCurrency("TRY");
         setIsActive(true);
+
+        setWifiName("");
+        setWifiPassword("");
+        setWifiSecurity("WPA2");
     }
 
     async function handleUpdate() {
@@ -253,15 +332,47 @@ export default function BusinessPage() {
             return;
         }
 
+        if (
+            wifiName.trim() &&
+            !wifiPassword.trim() &&
+            !editingBusiness.wifiPassword
+        ) {
+            alert(
+                "Please enter a Wi-Fi password."
+            );
+            return;
+        }
+
         try {
             setSaving(true);
 
-            const payload = {
+            const payload: Record<string, any> = {
                 name: name.trim(),
-                phone: phone.trim() || undefined,
+
+                phone:
+                    phone.trim() ||
+                    undefined,
+
                 themeColor,
+                currency,
                 isActive,
+
+                wifiName:
+                    wifiName.trim() ||
+                    undefined,
+
+                wifiSecurity:
+                    wifiName.trim()
+                        ? wifiSecurity
+                        : undefined,
             };
+
+            // Only send a new Wi-Fi password when
+            // the admin actually entered one.
+            if (wifiPassword.trim()) {
+                payload.wifiPassword =
+                    wifiPassword.trim();
+            }
 
             if (role === "ADMIN") {
                 await api.put(
@@ -278,7 +389,6 @@ export default function BusinessPage() {
             closeEdit();
 
             await loadBusinesses();
-
         } catch (error: any) {
             console.error(
                 "Update business error:",
@@ -329,7 +439,6 @@ export default function BusinessPage() {
             );
 
             await loadBusinesses();
-
         } catch (error: any) {
             console.error(
                 "End trial error:",
@@ -370,7 +479,6 @@ export default function BusinessPage() {
             );
 
             await loadBusinesses();
-
         } catch (error: any) {
             console.error(
                 "Delete business error:",
@@ -408,9 +516,6 @@ export default function BusinessPage() {
             const response =
                 await api.get(endpoint);
 
-            console.log("🔥 QR RESPONSE:", response.data);
-            console.log("🔥 MENU URL:", response.data.menuUrl);
-
             setQrCode(
                 response.data.qrCode ?? ""
             );
@@ -418,7 +523,6 @@ export default function BusinessPage() {
             setQrMenuUrl(
                 response.data.menuUrl ?? ""
             );
-
         } catch (error: any) {
             console.error(
                 "QR error:",
@@ -523,7 +627,7 @@ export default function BusinessPage() {
 
                     <p className="text-gray-400 mt-1 text-sm sm:text-base">
                         {role === "SUPER_ADMIN"
-                            ? "Manage all businesses on MenuM."
+                            ? "Manage all businesses on meno."
                             : "Manage your business information and menu QR code."}
                     </p>
                 </div>
@@ -630,10 +734,11 @@ export default function BusinessPage() {
                                     </div>
 
                                     <span
-                                        className={`flex-shrink-0 text-[10px] sm:text-xs px-2 sm:px-3 py-1.5 rounded-full ${business.isActive
+                                        className={`flex-shrink-0 text-[10px] sm:text-xs px-2 sm:px-3 py-1.5 rounded-full ${
+                                            business.isActive
                                                 ? "bg-green-500/10 text-green-400"
                                                 : "bg-red-500/10 text-red-400"
-                                            }`}
+                                        }`}
                                     >
                                         {business.isActive
                                             ? "Active"
@@ -655,6 +760,28 @@ export default function BusinessPage() {
                                         <p className="text-sm mt-2 break-words">
                                             {business.phone ||
                                                 "Not provided"}
+                                        </p>
+
+                                    </div>
+
+                                    <div className="bg-[#0b1120] border border-white/5 rounded-xl p-4">
+
+                                        <p className="text-xs text-gray-500">
+                                            Currency
+                                        </p>
+
+                                        <p className="text-sm mt-2">
+                                            {business.currency === "TRY" &&
+                                                "Turkish Lira (₺)"}
+
+                                            {business.currency === "USD" &&
+                                                "US Dollar ($)"}
+
+                                            {business.currency === "EUR" &&
+                                                "Euro (€)"}
+
+                                            {business.currency === "GBP" &&
+                                                "British Pound (£)"}
                                         </p>
 
                                     </div>
@@ -713,6 +840,31 @@ export default function BusinessPage() {
 
                                     </div>
 
+                                    <div className="bg-[#0b1120] border border-white/5 rounded-xl p-4">
+
+                                        <p className="text-xs text-gray-500">
+                                            Wi-Fi
+                                        </p>
+
+                                        {business.wifiName ? (
+                                            <>
+                                                <p className="text-sm mt-2 font-medium">
+                                                    📶 {business.wifiName}
+                                                </p>
+
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    {business.wifiSecurity ||
+                                                        "WPA2"}
+                                                </p>
+                                            </>
+                                        ) : (
+                                            <p className="text-sm mt-2 text-gray-500">
+                                                Not configured
+                                            </p>
+                                        )}
+
+                                    </div>
+
                                 </div>
 
                                 {/* ACTIONS */}
@@ -746,7 +898,7 @@ export default function BusinessPage() {
 
                                     {role === "SUPER_ADMIN" &&
                                         business.subscriptionStatus ===
-                                        "TRIAL" && (
+                                            "TRIAL" && (
                                             <button
                                                 onClick={() =>
                                                     handleEndTrial(
@@ -797,7 +949,7 @@ export default function BusinessPage() {
                         onMouseDown={(event) => {
                             if (
                                 event.target ===
-                                event.currentTarget &&
+                                    event.currentTarget &&
                                 !saving
                             ) {
                                 closeCreateModal();
@@ -926,11 +1078,128 @@ export default function BusinessPage() {
 
                                         </div>
 
+                                        <div>
+                                            <label className="block text-sm text-gray-400 mb-2">
+                                                Currency
+                                            </label>
+
+                                            <select
+                                                value={createCurrency}
+                                                onChange={(e) =>
+                                                    setCreateCurrency(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                className="w-full bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500 text-white"
+                                            >
+                                                <option value="TRY">
+                                                    Turkish Lira (₺)
+                                                </option>
+
+                                                <option value="USD">
+                                                    US Dollar ($)
+                                                </option>
+
+                                                <option value="EUR">
+                                                    Euro (€)
+                                                </option>
+
+                                                <option value="GBP">
+                                                    British Pound (£)
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        {/* WIFI */}
+
+                                        <div className="bg-[#0b1120] border border-white/5 rounded-2xl p-4">
+
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <span className="text-lg">
+                                                    📶
+                                                </span>
+
+                                                <div>
+                                                    <h3 className="font-semibold">
+                                                        Wi-Fi
+                                                    </h3>
+
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        Optional. Customers can connect from the menu.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4">
+
+                                                <div>
+                                                    <label className="block text-sm text-gray-400 mb-2">
+                                                        Wi-Fi Name (SSID)
+                                                    </label>
+
+                                                    <input
+                                                        value={createWifiName}
+                                                        onChange={(e) =>
+                                                            setCreateWifiName(
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        placeholder="Cafe_WiFi"
+                                                        className="w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm text-gray-400 mb-2">
+                                                        Wi-Fi Password
+                                                    </label>
+
+                                                    <input
+                                                        type="password"
+                                                        value={createWifiPassword}
+                                                        onChange={(e) =>
+                                                            setCreateWifiPassword(
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        placeholder="Wi-Fi password"
+                                                        className="w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm text-gray-400 mb-2">
+                                                        Security
+                                                    </label>
+
+                                                    <select
+                                                        value={createWifiSecurity}
+                                                        onChange={(e) =>
+                                                            setCreateWifiSecurity(
+                                                                e.target.value as WifiSecurity
+                                                            )
+                                                        }
+                                                        className="w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500 text-white"
+                                                    >
+                                                        <option value="WPA">
+                                                            WPA
+                                                        </option>
+
+                                                        <option value="WPA2">
+                                                            WPA2
+                                                        </option>
+                                                    </select>
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
                                     </div>
 
                                     {/* ADMIN */}
 
-                                    <div className="bg-[#0b1120] border border-white/5 rounded-2xl p-4 sm:p-5">
+                                    <div className="bg-[#0b1120] border border-white/5 rounded-2xl p-4 sm:p-5 h-fit">
 
                                         <h3 className="font-semibold">
                                             Admin Account
@@ -1012,7 +1281,7 @@ export default function BusinessPage() {
                     onMouseDown={(event) => {
                         if (
                             event.target ===
-                            event.currentTarget &&
+                                event.currentTarget &&
                             !saving
                         ) {
                             closeEdit();
@@ -1117,6 +1386,129 @@ export default function BusinessPage() {
 
                             </div>
 
+                            <div>
+                                <label className="block text-sm text-gray-400 mb-2">
+                                    Currency
+                                </label>
+
+                                <select
+                                    value={currency}
+                                    onChange={(e) =>
+                                        setCurrency(
+                                            e.target.value
+                                        )
+                                    }
+                                    className="w-full bg-[#0b1120] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500 text-white"
+                                >
+                                    <option value="TRY">
+                                        Turkish Lira (₺)
+                                    </option>
+
+                                    <option value="USD">
+                                        US Dollar ($)
+                                    </option>
+
+                                    <option value="EUR">
+                                        Euro (€)
+                                    </option>
+
+                                    <option value="GBP">
+                                        British Pound (£)
+                                    </option>
+                                </select>
+                            </div>
+
+                            {/* WIFI */}
+
+                            <div className="bg-[#0b1120] border border-white/5 rounded-2xl p-4">
+
+                                <div className="flex items-center gap-2 mb-4">
+
+                                    <span className="text-lg">
+                                        📶
+                                    </span>
+
+                                    <div>
+                                        <h3 className="font-semibold">
+                                            Wi-Fi Settings
+                                        </h3>
+
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Leave Wi-Fi name empty to disable Wi-Fi on the menu.
+                                        </p>
+                                    </div>
+
+                                </div>
+
+                                <div className="space-y-4">
+
+                                    <div>
+                                        <label className="block text-sm text-gray-400 mb-2">
+                                            Wi-Fi Name (SSID)
+                                        </label>
+
+                                        <input
+                                            value={wifiName}
+                                            onChange={(e) =>
+                                                setWifiName(
+                                                    e.target.value
+                                                )
+                                            }
+                                            placeholder="Cafe_WiFi"
+                                            className="w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm text-gray-400 mb-2">
+                                            Wi-Fi Password
+                                        </label>
+
+                                        <input
+                                            type="password"
+                                            value={wifiPassword}
+                                            onChange={(e) =>
+                                                setWifiPassword(
+                                                    e.target.value
+                                                )
+                                            }
+                                            placeholder="Enter new password"
+                                            className="w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500"
+                                        />
+
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            Leave empty to keep the current password.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm text-gray-400 mb-2">
+                                            Security
+                                        </label>
+
+                                        <select
+                                            value={wifiSecurity}
+                                            onChange={(e) =>
+                                                setWifiSecurity(
+                                                    e.target.value as WifiSecurity
+                                                )
+                                            }
+                                            className="w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500 text-white"
+                                        >
+                                            <option value="WPA">
+                                                WPA
+                                            </option>
+
+                                            <option value="WPA2">
+                                                WPA2
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
                             <label className="flex items-center gap-3 cursor-pointer">
 
                                 <input
@@ -1177,7 +1569,7 @@ export default function BusinessPage() {
                     onMouseDown={(event) => {
                         if (
                             event.target ===
-                            event.currentTarget &&
+                                event.currentTarget &&
                             !qrLoading
                         ) {
                             closeQr();
@@ -1226,6 +1618,7 @@ export default function BusinessPage() {
                             ) : qrCode ? (
 
                                 <>
+
                                     <div className="bg-white rounded-2xl p-4 sm:p-5 flex items-center justify-center">
 
                                         <img
