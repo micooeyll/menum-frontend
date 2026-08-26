@@ -50,7 +50,7 @@ export default function Navbar() {
     // PAGE NAME
     // =====================================================
 
-    let pageName = "MenuM";
+    let pageName = "meno";
 
     if (pathname.includes("/dashboard")) {
         pageName = "Dashboard";
